@@ -263,6 +263,19 @@
     .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
     .btn-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
 
+    /* Snake speed control */
+    .speed-control { width: 100%; max-width: 320px; display: flex; flex-direction: column; gap: 6px; }
+    .speed-label { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
+    .speed-label b { color: var(--text); }
+    #speedRange { width: 100%; accent-color: var(--primary); height: 26px; cursor: pointer; }
+    .speed-ticks { display: flex; justify-content: space-between; font-size: 0.68rem; color: var(--text-muted); }
+
+    /* On a computer (mouse, wide), let the board fill the screen: scale it to the
+       largest size that still fits the viewport height. */
+    @media (min-width: 761px) and (pointer: fine) {
+      .stage, .hud { max-width: min(94vw, max(420px, calc((100vh - 235px) * 1.4))); }
+    }
+
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
     }
@@ -328,6 +341,12 @@
         blow off a cube, a head shot pushes their head back, any other hit closes the gap. Hit a wall,
         the other snake, or yourself and you lose. Two heads colliding is a tie.
       </p>
+
+      <div class="speed-control">
+        <label class="speed-label" for="speedRange">Snake speed: <b id="speedName">Normal</b></label>
+        <input type="range" id="speedRange" min="1" max="5" step="1" value="2" aria-label="Snake speed">
+        <div class="speed-ticks"><span>Relaxed</span><span>Turbo</span></div>
+      </div>
 
       <div class="mode-tabs">
         <button class="mode-tab active" data-mode="local" id="tab-local">Same device</button>
@@ -402,12 +421,36 @@
     var canvas = document.getElementById('board');
     var ctx = canvas.getContext('2d');
 
-    var COLS = 21, ROWS = 15, CELL = 28;
-    canvas.width = COLS * CELL;
-    canvas.height = ROWS * CELL;
+    var COLS = 21, ROWS = 15;
+    var CELL = 28;
 
-    var SNAKE_MS = 120;
-    var PROJ_MS = 40;
+    // Snake speed presets (ms per snake step; lower is faster). Projectiles always
+    // move faster than the snakes. The chosen level is applied when a round starts.
+    var SPEEDS = [
+      null,
+      { name: 'Relaxed', snake: 175, proj: 58 },
+      { name: 'Normal',  snake: 130, proj: 44 },
+      { name: 'Fast',    snake: 100, proj: 34 },
+      { name: 'Faster',  snake: 75,  proj: 26 },
+      { name: 'Turbo',   snake: 55,  proj: 22 }
+    ];
+    var speedLevel = 2;
+    var SNAKE_MS = SPEEDS[speedLevel].snake;
+    var PROJ_MS = SPEEDS[speedLevel].proj;
+
+    // Size the canvas backing store to its displayed size (times devicePixelRatio)
+    // so the board stays crisp when it fills a large screen.
+    function fitCanvas() {
+      var dpr = window.devicePixelRatio || 1;
+      var cssW = canvas.clientWidth || COLS * 28;
+      var w = Math.max(280, Math.round(cssW * dpr));
+      canvas.width = w;
+      canvas.height = Math.round(w * ROWS / COLS);
+      CELL = canvas.width / COLS;
+      if (!running) draw(remoteState || null);
+    }
+    window.addEventListener('resize', fitCanvas);
+    window.addEventListener('orientationchange', fitCanvas);
 
     var COLORS = {
       green: '#43d98c', greenHead: '#7ff0b6',
@@ -573,6 +616,7 @@
     }
 
     function startEngineGame(m) {
+      applySpeed();
       mode = m;
       localPlayer = (m === 'client') ? 2 : 1;
       game = Engine.createGame({ config: { cols: COLS, rows: ROWS } });
@@ -711,6 +755,20 @@
       else { startLocal(); }
     });
 
+    // Speed control wiring (applies to local and to the online host).
+    var speedRange = document.getElementById('speedRange');
+    var speedName = document.getElementById('speedName');
+    function applySpeed() { var s = SPEEDS[speedLevel] || SPEEDS[2]; SNAKE_MS = s.snake; PROJ_MS = s.proj; }
+    function updateSpeedLabel() {
+      speedLevel = parseInt(speedRange.value, 10) || 2;
+      speedName.textContent = (SPEEDS[speedLevel] || SPEEDS[2]).name;
+      try { localStorage.setItem('sd_speed', String(speedLevel)); } catch (e) {}
+    }
+    try { var sv = parseInt(localStorage.getItem('sd_speed'), 10); if (sv >= 1 && sv <= 5) speedRange.value = String(sv); } catch (e) {}
+    speedRange.addEventListener('input', updateSpeedLabel);
+    updateSpeedLabel();
+
+    fitCanvas();
     draw(null);
   })();
   </script>
