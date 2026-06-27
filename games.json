@@ -22,5 +22,13 @@
     "route": "/memory",
     "blurb": "Flip cards and find all the pairs. Beat your time and best score.",
     "accent": "#ffd166"
+  },
+  {
+    "id": "snake-duel",
+    "title": "Snake Duel",
+    "emoji": "⚔️",
+    "route": "/snake-duel",
+    "blurb": "Two snakes duel head to head. Grow to 6 to win, or shoot your rival to pieces.",
+    "accent": "#ff7a45"
   }
 ]

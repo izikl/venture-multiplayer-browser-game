@@ -1,11 +1,33 @@
 {
   "routes": [
-    { "route": "/word-blitz",   "rewrite": "/word-blitz/index.html" },
-    { "route": "/word-blitz/*", "rewrite": "/word-blitz/index.html" },
-    { "route": "/snake",        "rewrite": "/snake/index.html" },
-    { "route": "/snake/*",      "rewrite": "/snake/index.html" },
-    { "route": "/memory",       "rewrite": "/memory/index.html" },
-    { "route": "/memory/*",     "rewrite": "/memory/index.html" }
+    {
+      "route": "/word-blitz",
+      "rewrite": "/word-blitz/index.html"
+    },
+    {
+      "route": "/word-blitz/*",
+      "rewrite": "/word-blitz/index.html"
+    },
+    {
+      "route": "/snake",
+      "rewrite": "/snake/index.html"
+    },
+    {
+      "route": "/snake/*",
+      "rewrite": "/snake/index.html"
+    },
+    {
+      "route": "/memory",
+      "rewrite": "/memory/index.html"
+    },
+    {
+      "route": "/memory/*",
+      "rewrite": "/memory/index.html"
+    },
+    {
+      "route": "/snake-duel",
+      "rewrite": "/snake-duel/index.html"
+    }
   ],
   "responseOverrides": {
     "404": {

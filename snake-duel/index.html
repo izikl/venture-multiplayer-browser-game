@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Snake Duel - My Plays</title>
+  <meta name="description" content="Snake Duel: two players duel head to head in a snake arena where you can also shoot the other snake. Grow to 6 to win. Free, no account, on My Plays.">
+  <meta property="og:title" content="Snake Duel - My Plays">
+  <meta property="og:description" content="Two-player competitive snake with shooting. Grow to 6 cubes to win.">
+  <meta property="og:type" content="website">
+  <link rel="canonical" href="https://myplays.net/snake-duel">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐍</text></svg>">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #0f1117;
+      --surface:    #1a1d2e;
+      --surface2:   #252840;
+      --primary:    #6c63ff;
+      --green:      #43d98c;
+      --pink:       #ff6584;
+      --yellow:     #ffd166;
+      --text:       #e8eaf0;
+      --text-muted: #8b8fa8;
+      --border:     #2e3154;
+      --radius:     12px;
+      --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 12px 32px;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(circle, #6c63ff0d 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .hub-link {
+      align-self: flex-start;
+      margin: 16px 0 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 7px 13px;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      position: relative;
+      z-index: 2;
+    }
+    .hub-link:hover { color: var(--text); border-color: var(--green); }
+    .hub-link:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(67,217,140,0.4); }
+
+    header { text-align: center; padding: 18px 0 10px; position: relative; z-index: 1; }
+    .title {
+      font-size: clamp(1.8rem, 6vw, 2.6rem);
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, var(--green) 0%, var(--pink) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .subtitle { color: var(--text-muted); font-size: 0.95rem; margin-top: 6px; }
+
+    .hud {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      width: 100%;
+      max-width: 620px;
+      margin: 8px auto 12px;
+      position: relative;
+      z-index: 1;
+    }
+    .player-panel {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 14px;
+    }
+    .player-panel.p1 { border-top: 3px solid var(--green); }
+    .player-panel.p2 { border-top: 3px solid var(--pink); }
+    .player-name { font-weight: 800; font-size: 0.9rem; }
+    .player-panel.p1 .player-name { color: var(--green); }
+    .player-panel.p2 .player-name { color: var(--pink); }
+    .pips { display: flex; gap: 5px; margin-top: 8px; }
+    .pip {
+      width: 16px; height: 16px; border-radius: 4px;
+      background: var(--surface2); border: 1px solid var(--border);
+    }
+    .player-panel.p1 .pip.on { background: var(--green); border-color: var(--green); }
+    .player-panel.p2 .pip.on { background: var(--pink); border-color: var(--pink); }
+    .fire-state { margin-top: 8px; font-size: 0.72rem; color: var(--text-muted); font-weight: 600; }
+    .fire-state.ready { color: var(--yellow); }
+
+    .stage { position: relative; z-index: 1; width: 100%; max-width: 620px; }
+    canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      background: #0b0d14;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      touch-action: none;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 14px;
+      padding: 24px;
+      background: rgba(10, 12, 20, 0.92);
+      border-radius: var(--radius);
+    }
+    .overlay.hidden { display: none; }
+    .overlay-title { font-size: 1.9rem; font-weight: 900; letter-spacing: -0.5px; }
+    .overlay-text { color: var(--text-muted); font-size: 0.92rem; max-width: 420px; line-height: 1.6; }
+
+    .controls {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin: 4px 0;
+    }
+    .ctrl-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      min-width: 150px;
+    }
+    .ctrl-card.p1 { border-top: 3px solid var(--green); }
+    .ctrl-card.p2 { border-top: 3px solid var(--pink); }
+    .ctrl-head { font-weight: 800; font-size: 0.85rem; margin-bottom: 6px; }
+    .ctrl-card.p1 .ctrl-head { color: var(--green); }
+    .ctrl-card.p2 .ctrl-head { color: var(--pink); }
+    .ctrl-row { font-size: 0.78rem; color: var(--text-muted); margin: 3px 0; }
+    .ctrl-row b { color: var(--text); font-weight: 700; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      padding: 12px 24px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      min-height: 46px;
+      text-decoration: none;
+      color: #fff;
+      background: var(--primary);
+      transition: opacity 150ms;
+    }
+    .btn:hover { opacity: 0.88; }
+    .btn:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(108,99,255,0.5); }
+    .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+
+    .hint { color: var(--text-muted); font-size: 0.78rem; margin-top: 14px; text-align: center; position: relative; z-index: 1; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <a href="/" class="hub-link">&#8592; My Plays</a>
+
+  <header>
+    <div class="title">Snake Duel</div>
+    <div class="subtitle">Two snakes, one arena. Grow to 6 to win, or shoot your rival to pieces.</div>
+  </header>
+
+  <div class="hud">
+    <div class="player-panel p1">
+      <div class="player-name">Player 1 - Green</div>
+      <div class="pips" id="pips1"></div>
+      <div class="fire-state" id="fire1">Fire: Space</div>
+    </div>
+    <div class="player-panel p2">
+      <div class="player-name">Player 2 - Pink</div>
+      <div class="pips" id="pips2"></div>
+      <div class="fire-state" id="fire2">Fire: Enter</div>
+    </div>
+  </div>
+
+  <div class="stage">
+    <canvas id="board" width="588" height="420" aria-label="Snake Duel board"></canvas>
+
+    <div class="overlay" id="startOverlay">
+      <div class="overlay-title">Snake Duel</div>
+      <div class="overlay-text">
+        Each snake starts at 3 cubes. Eat food to grow. Reach 6 cubes to win. Shoot the other
+        snake to blow off a cube, a head shot pushes their head back, any other hit closes the gap.
+        Hit a wall, the other snake, or yourself and you lose. Two heads colliding is a tie.
+      </div>
+      <div class="controls">
+        <div class="ctrl-card p1">
+          <div class="ctrl-head">Player 1 - Green</div>
+          <div class="ctrl-row">Move: <b>W A S D</b></div>
+          <div class="ctrl-row">Fire: <b>Space</b></div>
+        </div>
+        <div class="ctrl-card p2">
+          <div class="ctrl-head">Player 2 - Pink</div>
+          <div class="ctrl-row">Move: <b>Arrow Keys</b></div>
+          <div class="ctrl-row">Fire: <b>Enter</b></div>
+        </div>
+      </div>
+      <button class="btn" id="btn-start">Start duel</button>
+    </div>
+
+    <div class="overlay hidden" id="resultOverlay">
+      <div class="overlay-title" id="resultTitle">Result</div>
+      <div class="overlay-text" id="resultText"></div>
+      <div class="btn-row">
+        <button class="btn" id="btn-rematch">Play again</button>
+        <a href="/" class="btn btn-secondary">Hub</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="hint">Tip: press <b>P</b> to pause. Two players, one keyboard. Local play.</div>
+
+  <script src="/snake-duel/engine.js"></script>
+  <script>
+  (function () {
+    'use strict';
+    var Engine = window.SnakeDuelEngine;
+    var canvas = document.getElementById('board');
+    var ctx = canvas.getContext('2d');
+
+    var COLS = 21, ROWS = 15, CELL = 28;
+    canvas.width = COLS * CELL;
+    canvas.height = ROWS * CELL;
+
+    var SNAKE_MS = 120;   // snake step cadence
+    var PROJ_MS = 40;     // projectile step cadence (faster than snakes)
+
+    var COLORS = {
+      green:     '#43d98c',
+      greenHead: '#7ff0b6',
+      pink:      '#ff6584',
+      pinkHead:  '#ff9bb1',
+      food:      '#ffd166',
+      shot:      '#ffffff'
+    };
+
+    var game = null;
+    var running = false;
+    var paused = false;
+    var lastSnakeStep = 0;
+    var lastProjStep = 0;
+    var rafId = null;
+
+    var startOverlay = document.getElementById('startOverlay');
+    var resultOverlay = document.getElementById('resultOverlay');
+    var resultTitle = document.getElementById('resultTitle');
+    var resultText = document.getElementById('resultText');
+    var fire1El = document.getElementById('fire1');
+    var fire2El = document.getElementById('fire2');
+
+    function buildPips(el) {
+      el.innerHTML = '';
+      for (var i = 0; i < 6; i++) {
+        var p = document.createElement('div');
+        p.className = 'pip';
+        el.appendChild(p);
+      }
+    }
+    buildPips(document.getElementById('pips1'));
+    buildPips(document.getElementById('pips2'));
+
+    function updateHud() {
+      if (!game) return;
+      var panels = [
+        { el: document.getElementById('pips1'), len: game.snakes[0].cells.length },
+        { el: document.getElementById('pips2'), len: game.snakes[1].cells.length }
+      ];
+      panels.forEach(function (p) {
+        var pips = p.el.children;
+        for (var i = 0; i < pips.length; i++) {
+          pips[i].className = 'pip' + (i < p.len ? ' on' : '');
+        }
+      });
+      var t = Date.now();
+      setFire(fire1El, game.snakes[0], 'Space', t);
+      setFire(fire2El, game.snakes[1], 'Enter', t);
+    }
+
+    function setFire(el, snake, key, t) {
+      var ready = t >= snake.cooldownUntil;
+      el.textContent = ready ? ('Fire ready (' + key + ')') : 'Reloading...';
+      el.className = 'fire-state' + (ready ? ' ready' : '');
+    }
+
+    function draw() {
+      ctx.fillStyle = '#0b0d14';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // subtle grid
+      ctx.strokeStyle = '#171a26';
+      ctx.lineWidth = 1;
+      for (var x = 0; x <= COLS; x++) {
+        ctx.beginPath(); ctx.moveTo(x * CELL, 0); ctx.lineTo(x * CELL, canvas.height); ctx.stroke();
+      }
+      for (var y = 0; y <= ROWS; y++) {
+        ctx.beginPath(); ctx.moveTo(0, y * CELL); ctx.lineTo(canvas.width, y * CELL); ctx.stroke();
+      }
+
+      if (!game) return;
+
+      // food
+      game.food.forEach(function (f) {
+        ctx.fillStyle = COLORS.food;
+        roundCell(f.x, f.y, 6);
+      });
+
+      // snakes
+      drawSnake(game.snakes[0], COLORS.green, COLORS.greenHead);
+      drawSnake(game.snakes[1], COLORS.pink, COLORS.pinkHead);
+
+      // projectiles
+      game.projectiles.forEach(function (p) {
+        ctx.fillStyle = COLORS.shot;
+        ctx.beginPath();
+        ctx.arc(p.pos.x * CELL + CELL / 2, p.pos.y * CELL + CELL / 2, CELL / 5, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    }
+
+    function roundCell(cx, cy, r) {
+      var px = cx * CELL + 2, py = cy * CELL + 2, s = CELL - 4;
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(px, py, s, s, r);
+      else ctx.rect(px, py, s, s);
+      ctx.fill();
+    }
+
+    function drawSnake(snake, bodyColor, headColor) {
+      if (!snake.cells.length) return;
+      snake.cells.forEach(function (c, i) {
+        ctx.fillStyle = i === 0 ? headColor : bodyColor;
+        roundCell(c.x, c.y, i === 0 ? 8 : 5);
+      });
+    }
+
+    function loop(ts) {
+      if (!running) return;
+      rafId = requestAnimationFrame(loop);
+      if (paused) { draw(); return; }
+      if (!lastSnakeStep) { lastSnakeStep = ts; lastProjStep = ts; }
+
+      if (ts - lastProjStep >= PROJ_MS) {
+        game.tickProjectiles();
+        lastProjStep = ts;
+      }
+      if (ts - lastSnakeStep >= SNAKE_MS) {
+        game.tickSnakes();
+        lastSnakeStep = ts;
+      }
+
+      draw();
+      updateHud();
+
+      if (game.status !== 'playing') { endGame(); }
+    }
+
+    function startGame() {
+      game = Engine.createGame({ config: { cols: COLS, rows: ROWS } });
+      running = true;
+      paused = false;
+      lastSnakeStep = 0;
+      lastProjStep = 0;
+      startOverlay.classList.add('hidden');
+      resultOverlay.classList.add('hidden');
+      updateHud();
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(loop);
+    }
+
+    function endGame() {
+      running = false;
+      if (rafId) cancelAnimationFrame(rafId);
+      var msg = { p1: 'Player 1 - Green wins!', p2: 'Player 2 - Pink wins!', tie: "It's a tie!" };
+      resultTitle.textContent = msg[game.status] || 'Result';
+      resultTitle.style.color = game.status === 'p1' ? COLORS.green
+        : game.status === 'p2' ? COLORS.pink : 'var(--text)';
+      resultText.textContent = 'Both players went out at the same moment. Line up a rematch.';
+      if (game.status === 'p1') resultText.textContent = 'Green reached the win or left Pink with nothing. Rematch?';
+      if (game.status === 'p2') resultText.textContent = 'Pink reached the win or left Green with nothing. Rematch?';
+      resultOverlay.classList.remove('hidden');
+      updateHud();
+    }
+
+    var KEYMAP = {
+      KeyW: [1, 'up'], KeyS: [1, 'down'], KeyA: [1, 'left'], KeyD: [1, 'right'],
+      ArrowUp: [2, 'up'], ArrowDown: [2, 'down'], ArrowLeft: [2, 'left'], ArrowRight: [2, 'right']
+    };
+    var FIRE = { Space: 1, Enter: 2 };
+    var PREVENT = { Space: 1, Enter: 1, ArrowUp: 1, ArrowDown: 1, ArrowLeft: 1, ArrowRight: 1 };
+
+    window.addEventListener('keydown', function (e) {
+      if (PREVENT[e.code]) e.preventDefault();
+      if (e.code === 'KeyP') { if (running) paused = !paused; return; }
+      if (!running || paused) return;
+      if (KEYMAP[e.code]) { game.setDir(KEYMAP[e.code][0], KEYMAP[e.code][1]); return; }
+      if (FIRE[e.code]) { game.fire(FIRE[e.code]); }
+    });
+
+    document.getElementById('btn-start').addEventListener('click', startGame);
+    document.getElementById('btn-rematch').addEventListener('click', startGame);
+
+    draw();
+  })();
+  </script>
+</body>
+</html>

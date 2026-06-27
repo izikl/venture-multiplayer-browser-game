@@ -1,9 +1,9 @@
 {
-  "name": "blitz-arcade",
+  "name": "my-plays",
   "version": "1.0.0",
-  "description": "Blitz Arcade - free skill-based browser games",
+  "description": "My Plays - free skill-based browser games",
   "private": true,
   "scripts": {
-    "test": "node --test test/check.js"
+    "test": "node --test"
   }
 }

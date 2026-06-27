@@ -17,9 +17,9 @@ test('games.json exists and is valid JSON', () => {
   assert.ok(Array.isArray(games), 'games.json must be a JSON array');
 });
 
-test('games.json contains exactly 3 games', () => {
+test('games.json contains exactly 4 games', () => {
   const games = JSON.parse(read('games.json'));
-  assert.strictEqual(games.length, 3, 'manifest must list exactly 3 games');
+  assert.strictEqual(games.length, 4, 'manifest must list exactly 4 games');
 });
 
 test('each game entry has required fields', () => {
@@ -35,12 +35,13 @@ test('each game entry has required fields', () => {
   }
 });
 
-test('games.json has word-blitz, snake, and memory', () => {
+test('games.json has word-blitz, snake, memory, and snake-duel', () => {
   const games = JSON.parse(read('games.json'));
   const ids = games.map(g => g.id);
   assert.ok(ids.includes('word-blitz'), 'word-blitz must be in manifest');
   assert.ok(ids.includes('snake'),      'snake must be in manifest');
   assert.ok(ids.includes('memory'),     'memory must be in manifest');
+  assert.ok(ids.includes('snake-duel'), 'snake-duel must be in manifest');
 });
 
 // --- 2. HTML files exist ---
@@ -61,11 +62,21 @@ test('memory/index.html exists', () => {
   assert.ok(exists('memory/index.html'), 'memory/index.html must exist');
 });
 
+test('snake-duel page and engine exist', () => {
+  assert.ok(exists('snake-duel/index.html'), 'snake-duel/index.html must exist');
+  assert.ok(exists('snake-duel/engine.js'), 'snake-duel/engine.js must exist');
+});
+
 // --- 3. Hub page structure ---
 
 test('hub page has game brand name', () => {
   const html = read('index.html');
-  assert.ok(html.includes('Blitz Arcade'), 'hub must contain brand name');
+  assert.ok(html.includes('My Plays'), 'hub must contain brand name');
+});
+
+test('hub page declares the myplays.net canonical', () => {
+  const html = read('index.html');
+  assert.ok(html.includes('<link rel="canonical" href="https://myplays.net/">'), 'hub must set the myplays.net canonical');
 });
 
 test('hub page fetches games.json manifest', () => {
@@ -148,6 +159,7 @@ test('SWA config routes all three games', () => {
   assert.ok(routePaths.some(r => r.includes('word-blitz')), 'SWA must route /word-blitz');
   assert.ok(routePaths.some(r => r.includes('snake')),      'SWA must route /snake');
   assert.ok(routePaths.some(r => r.includes('memory')),     'SWA must route /memory');
+  assert.ok(routePaths.some(r => r.includes('snake-duel')), 'SWA must route /snake-duel');
 });
 
 // --- 8. No em dashes in player-facing copy ---
@@ -172,5 +184,11 @@ test('memory has no em dashes in player-facing text', () => {
   const html = read('memory/index.html');
   const raw = html.replace(/&mdash;/g, '').replace(/&#8212;/g, '');
   assert.strictEqual(raw.indexOf('\u2014'), -1, 'memory must not use raw em dashes');
+});
+
+test('snake-duel has no em dashes in player-facing text', () => {
+  const html = read('snake-duel/index.html');
+  const raw = html.replace(/&mdash;/g, '').replace(/&#8212;/g, '');
+  assert.strictEqual(raw.indexOf('\u2014'), -1, 'snake-duel must not use raw em dashes');
 });
 
