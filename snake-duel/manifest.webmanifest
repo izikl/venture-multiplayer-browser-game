@@ -1,0 +1,13 @@
+{
+  "name": "Snake Duel - My Plays",
+  "short_name": "Snake Duel",
+  "start_url": "/snake-duel",
+  "scope": "/snake-duel",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f1117",
+  "theme_color": "#0f1117",
+  "icons": [
+    { "src": "/snake-duel/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

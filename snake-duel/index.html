@@ -10,6 +10,13 @@
   <meta property="og:type" content="website">
   <link rel="canonical" href="https://myplays.net/snake-duel">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐍</text></svg>">
+  <link rel="apple-touch-icon" href="/snake-duel/icon.svg">
+  <link rel="manifest" href="/snake-duel/manifest.webmanifest">
+  <meta name="theme-color" content="#0f1117">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Snake Duel">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -174,14 +181,14 @@
     .pad.p2 .fire-btn { border-color: var(--pink); color: var(--pink); }
 
     @media (pointer: coarse), (max-width: 760px) {
-      body { height: 100vh; height: 100dvh; padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); justify-content: space-between; overflow: hidden; }
+      body { height: 100vh; height: 100svh; height: var(--app-height, 100svh); padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); justify-content: space-between; overflow: hidden; }
       header, .hud { display: none; }
       .hub-link { position: fixed; top: calc(env(safe-area-inset-top) + 6px); left: 8px; margin: 0; z-index: 40; padding: 5px 11px; font-size: 0.78rem; }
       .pad.show { display: flex; }
       .pad { padding: 8px 4px; }
       .dpad { grid-template-columns: repeat(3, 52px); grid-template-rows: repeat(3, 52px); gap: 8px; }
       .dbtn { font-size: 1.45rem; }
-      .stage { max-width: min(96vw, calc((100dvh - 430px) * 1.4)); }
+      .stage { max-width: min(96vw, calc((var(--app-height, 100svh) - 420px) * 1.4)); }
     }
 
     /* Keep phones in portrait: a full-screen notice asks the player to rotate. */
@@ -354,6 +361,9 @@
         <input type="range" id="speedRange" min="1" max="5" step="1" value="2" aria-label="Snake speed">
         <div class="speed-ticks"><span>Relaxed</span><span>Turbo</span></div>
       </div>
+
+      <button class="btn btn-secondary fs-btn" id="btn-fullscreen" hidden>&#9974; Fullscreen</button>
+      <p class="overlay-text small fs-hint" id="fsHint" hidden>On iPhone: tap Share, then "Add to Home Screen" to play fullscreen.</p>
 
       <div class="mode-tabs">
         <button class="mode-tab active" data-mode="local" id="tab-local">Same device</button>
@@ -789,6 +799,36 @@
     speedRange.addEventListener('input', updateSpeedLabel);
     updateSpeedLabel();
 
+    // Drive layout height from the real visible viewport (iOS Safari toolbars make
+    // 100vh / 100dvh unreliable), so the bottom controls always fit on screen.
+    function setAppHeight() {
+      var h = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+      document.documentElement.style.setProperty('--app-height', Math.round(h) + 'px');
+      fitCanvas();
+    }
+    window.addEventListener('resize', setAppHeight);
+    window.addEventListener('orientationchange', function () { setTimeout(setAppHeight, 250); });
+    if (window.visualViewport) window.visualViewport.addEventListener('resize', setAppHeight);
+
+    // Fullscreen: a button where the API exists (Android, desktop). iPhone Safari
+    // has no fullscreen API, so show the Add to Home Screen tip instead.
+    (function () {
+      var fsBtn = document.getElementById('btn-fullscreen');
+      var fsHint = document.getElementById('fsHint');
+      var docEl = document.documentElement;
+      var standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+      if (standalone) return; // already running fullscreen as an installed app
+      if (document.fullscreenEnabled || docEl.webkitRequestFullscreen) {
+        fsBtn.hidden = false;
+        fsBtn.addEventListener('click', function () {
+          var req = docEl.requestFullscreen || docEl.webkitRequestFullscreen;
+          if (req) { try { req.call(docEl); } catch (e) {} }
+        });
+      } else if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
+        fsHint.hidden = false;
+      }
+    })();
+
     // Keep phones portrait: try to lock orientation, and pause while held landscape
     // (the rotate notice covers the screen until the phone is back in portrait).
     try { if (screen.orientation && screen.orientation.lock) screen.orientation.lock('portrait').catch(function () {}); } catch (e) {}
@@ -802,6 +842,7 @@
     if (landscapeMQ.addEventListener) landscapeMQ.addEventListener('change', checkOrientation);
     else if (landscapeMQ.addListener) landscapeMQ.addListener(checkOrientation);
 
+    setAppHeight();
     fitCanvas();
     draw(null);
   })();
