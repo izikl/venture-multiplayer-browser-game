@@ -150,7 +150,7 @@
       background: var(--surface2);
       border: 1px solid var(--border);
       color: var(--text);
-      border-radius: 12px;
+      border-radius: 50%;
       font-size: 1.3rem;
       display: flex;
       align-items: center;
@@ -174,14 +174,27 @@
     .pad.p2 .fire-btn { border-color: var(--pink); color: var(--pink); }
 
     @media (pointer: coarse), (max-width: 760px) {
-      body { height: 100vh; height: 100dvh; padding: 0; justify-content: space-between; overflow: hidden; }
+      body { height: 100vh; height: 100dvh; padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); justify-content: space-between; overflow: hidden; }
       header, .hud { display: none; }
-      .hub-link { position: fixed; top: 8px; left: 8px; margin: 0; z-index: 40; padding: 5px 11px; font-size: 0.78rem; }
+      .hub-link { position: fixed; top: calc(env(safe-area-inset-top) + 6px); left: 8px; margin: 0; z-index: 40; padding: 5px 11px; font-size: 0.78rem; }
       .pad.show { display: flex; }
-      .pad { padding: 10px 4px; }
-      .dpad { grid-template-columns: repeat(3, 52px); grid-template-rows: repeat(3, 52px); gap: 7px; }
+      .pad { padding: 8px 4px; }
+      .dpad { grid-template-columns: repeat(3, 52px); grid-template-rows: repeat(3, 52px); gap: 8px; }
       .dbtn { font-size: 1.45rem; }
-      .stage { max-width: min(96vw, calc((100dvh - 250px) * 1.4)); }
+      .stage { max-width: min(96vw, calc((100dvh - 430px) * 1.4)); }
+    }
+
+    /* Keep phones in portrait: a full-screen notice asks the player to rotate. */
+    .rotate-notice { display: none; }
+    @media (orientation: landscape) and (max-height: 520px) and (pointer: coarse) {
+      .rotate-notice {
+        display: flex; position: fixed; inset: 0; z-index: 100;
+        background: var(--bg); color: var(--text);
+        flex-direction: column; align-items: center; justify-content: center;
+        text-align: center; padding: 24px; gap: 14px;
+      }
+      .rotate-notice .rot-emoji { font-size: 3rem; }
+      .rotate-notice .rot-text { font-size: 1.05rem; color: var(--text-muted); max-width: 320px; line-height: 1.5; }
     }
 
     /* Full-screen modal overlays (start + result). Centered, scrollable, so the
@@ -277,6 +290,11 @@
   </style>
 </head>
 <body>
+  <div class="rotate-notice" id="rotateNotice">
+    <div class="rot-emoji">&#128241;</div>
+    <div class="rot-text">Please hold your phone in portrait to play Snake Duel.</div>
+  </div>
+
   <a href="/" class="hub-link">&#8592; My Plays</a>
 
   <header>
@@ -770,6 +788,19 @@
     try { var sv = parseInt(localStorage.getItem('sd_speed'), 10); if (sv >= 1 && sv <= 5) speedRange.value = String(sv); } catch (e) {}
     speedRange.addEventListener('input', updateSpeedLabel);
     updateSpeedLabel();
+
+    // Keep phones portrait: try to lock orientation, and pause while held landscape
+    // (the rotate notice covers the screen until the phone is back in portrait).
+    try { if (screen.orientation && screen.orientation.lock) screen.orientation.lock('portrait').catch(function () {}); } catch (e) {}
+    var landscapeMQ = window.matchMedia('(orientation: landscape) and (max-height: 520px) and (pointer: coarse)');
+    var autoPaused = false;
+    function checkOrientation() {
+      if (landscapeMQ.matches) {
+        if (running && !paused && (mode === 'local' || mode === 'host')) { paused = true; autoPaused = true; }
+      } else if (autoPaused) { paused = false; autoPaused = false; }
+    }
+    if (landscapeMQ.addEventListener) landscapeMQ.addEventListener('change', checkOrientation);
+    else if (landscapeMQ.addListener) landscapeMQ.addListener(checkOrientation);
 
     fitCanvas();
     draw(null);
