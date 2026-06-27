@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Memory Match - Blitz Arcade</title>
+  <meta name="description" content="Play Memory Match - flip cards and find all the pairs. Free skill-based browser game on Blitz Arcade.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🃏</text></svg>">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #0f1117;
+      --surface:    #1a1d2e;
+      --surface2:   #252840;
+      --primary:    #6c63ff;
+      --yellow:     #ffd166;
+      --green:      #43d98c;
+      --red:        #ff6b6b;
+      --text:       #e8eaf0;
+      --text-muted: #8b8fa8;
+      --border:     #2e3154;
+      --radius:     12px;
+      --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 12px 32px;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(circle, #ffd1660a 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .hub-header {
+      position: relative; z-index: 1;
+      width: 100%; max-width: 560px;
+      text-align: left;
+      padding: 16px 0 0;
+    }
+    .hub-link {
+      display: inline-flex; align-items: center; gap: 6px;
+      color: var(--text-muted); text-decoration: none;
+      font-size: 0.85rem; font-weight: 600;
+      padding: 8px 14px; border-radius: 8px;
+      border: 1px solid var(--border); background: var(--surface);
+      transition: color 0.15s, border-color 0.15s;
+      min-height: 44px;
+    }
+    .hub-link:hover { color: var(--text); border-color: var(--yellow); }
+    .hub-link:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(255,209,102,0.4); }
+
+    #game-wrap {
+      position: relative; z-index: 1;
+      width: 100%; max-width: 560px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      padding-top: 16px;
+    }
+
+    .logo { text-align: center; }
+    .logo h1 {
+      font-size: clamp(1.8rem, 5vw, 2.4rem);
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--yellow), #ffaa00);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.5px;
+    }
+    .logo p { color: var(--text-muted); font-size: 0.9rem; margin-top: 4px; }
+
+    /* Stats bar */
+    .stats-bar {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .stat {
+      padding: 12px;
+      text-align: center;
+      border-right: 1px solid var(--border);
+    }
+    .stat:last-child { border-right: none; }
+    .stat-label {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      font-weight: 700;
+    }
+    .stat-value {
+      font-size: 1.4rem;
+      font-weight: 900;
+      color: var(--yellow);
+      font-variant-numeric: tabular-nums;
+      margin-top: 2px;
+    }
+
+    /* Card grid */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      width: 100%;
+    }
+
+    /* Flip card */
+    .flip-card {
+      aspect-ratio: 1;
+      perspective: 600px;
+      cursor: pointer;
+      border-radius: 10px;
+    }
+    .flip-card:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(255,209,102,0.5); border-radius: 10px; }
+    .flip-card:active .flip-inner { transform: rotateY(180deg) scale(0.96); }
+
+    .flip-inner {
+      width: 100%; height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.35s cubic-bezier(0.2,0,0,1);
+      border-radius: 10px;
+    }
+    .flip-card.flipped .flip-inner,
+    .flip-card.matched .flip-inner { transform: rotateY(180deg); }
+
+    .flip-face {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(1.4rem, 5vw, 2rem);
+      user-select: none;
+    }
+
+    .flip-back {
+      background: var(--surface);
+      border: 2px solid var(--border);
+    }
+    .flip-back::after {
+      content: '?';
+      font-size: clamp(1.1rem, 4vw, 1.6rem);
+      font-weight: 900;
+      color: var(--text-muted);
+    }
+
+    .flip-front {
+      background: var(--surface2);
+      border: 2px solid var(--primary);
+      transform: rotateY(180deg);
+    }
+    .flip-card.matched .flip-front {
+      border-color: var(--green);
+      background: #0d2218;
+    }
+
+    /* Overlay */
+    .game-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,17,23,0.88);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      padding: 20px;
+    }
+    .game-overlay.hidden { display: none; }
+
+    .overlay-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px 28px;
+      text-align: center;
+      max-width: 360px;
+      width: 100%;
+    }
+    .overlay-emoji { font-size: 3rem; margin-bottom: 8px; }
+    .overlay-title { font-size: 1.6rem; font-weight: 900; margin-bottom: 8px; }
+    .overlay-sub { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px; line-height: 1.5; }
+    .overlay-score { font-size: 2.4rem; font-weight: 900; color: var(--yellow); margin-bottom: 4px; }
+    .overlay-detail { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 20px; }
+
+    /* Buttons */
+    .btn {
+      font-family: var(--font);
+      font-weight: 700;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      padding: 13px 24px;
+      transition: transform 0.1s, opacity 0.15s;
+      min-height: 44px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-yellow { background: var(--yellow); color: #1a1200; }
+    .btn-secondary {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn:hover { opacity: 0.88; }
+    .btn:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(255,209,102,0.4); }
+    .btn-row { display: flex; gap: 10px; justify-content: center; }
+
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    #game-wrap { animation: fade-up 200ms cubic-bezier(0,0,0,1) both; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="hub-header">
+    <a href="/" class="hub-link">&#8592; Blitz Arcade</a>
+  </div>
+
+  <div id="game-wrap">
+    <div class="logo">
+      <h1>🃏 Memory Match</h1>
+      <p>Flip cards and find all the pairs</p>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat">
+        <div class="stat-label">Time</div>
+        <div class="stat-value" id="timer">0:00</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Moves</div>
+        <div class="stat-value" id="moves">0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Best Score</div>
+        <div class="stat-value" id="best">-</div>
+      </div>
+    </div>
+
+    <div class="card-grid" id="card-grid" aria-label="Memory card grid"></div>
+  </div>
+
+  <!-- Start overlay -->
+  <div class="game-overlay" id="overlay-start">
+    <div class="overlay-card">
+      <div class="overlay-emoji">🃏</div>
+      <div class="overlay-title">Memory Match</div>
+      <div class="overlay-sub">
+        Flip cards to reveal emojis. Find all 8 pairs to win.<br>
+        Fewer moves and faster time = higher score.
+      </div>
+      <button class="btn btn-yellow" id="btn-start">Play</button>
+    </div>
+  </div>
+
+  <!-- Win overlay -->
+  <div class="game-overlay hidden" id="overlay-win">
+    <div class="overlay-card">
+      <div class="overlay-emoji">🏆</div>
+      <div class="overlay-title">You matched them all!</div>
+      <div class="overlay-score" id="win-score">0</div>
+      <div class="overlay-detail" id="win-detail"></div>
+      <div class="btn-row">
+        <button class="btn btn-yellow" id="btn-replay">Play Again</button>
+        <a href="/" class="btn btn-secondary">Hub</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  'use strict';
+
+  const EMOJIS = ['🎮','🎯','🚀','🌟','🎪','🎨','🏆','🎲'];
+  const HI_KEY = 'memory_hi';
+
+  const gridEl   = document.getElementById('card-grid');
+  const timerEl  = document.getElementById('timer');
+  const movesEl  = document.getElementById('moves');
+  const bestEl   = document.getElementById('best');
+  const startOv  = document.getElementById('overlay-start');
+  const winOv    = document.getElementById('overlay-win');
+  const winScore = document.getElementById('win-score');
+  const winDetail= document.getElementById('win-detail');
+
+  let cards = [], flipped = [], moves = 0, matched = 0, elapsed = 0, timerInterval = null, locked = false;
+
+  function loadBest() { return parseInt(localStorage.getItem(HI_KEY) || '0', 10); }
+  function saveBest(s) { if (s > loadBest()) localStorage.setItem(HI_KEY, String(s)); }
+
+  function fmtTime(s) { return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
+
+  function calcScore(mv, sec) {
+    return Math.max(0, 1000 - mv * 15 - sec * 2);
+  }
+
+  function updateBestDisplay() {
+    const b = loadBest();
+    bestEl.textContent = b > 0 ? b : '-';
+  }
+
+  function buildGrid() {
+    const pairs = [...EMOJIS, ...EMOJIS].sort(() => Math.random() - 0.5);
+    cards = pairs.map((emoji, i) => ({ id: i, emoji, flipped: false, matched: false }));
+    flipped = []; moves = 0; matched = 0; elapsed = 0; locked = false;
+    movesEl.textContent = '0';
+    timerEl.textContent = '0:00';
+
+    gridEl.innerHTML = '';
+    cards.forEach((card, i) => {
+      const el = document.createElement('div');
+      el.className = 'flip-card';
+      el.tabIndex = 0;
+      el.setAttribute('aria-label', 'Card ' + (i+1));
+      el.innerHTML = `
+        <div class="flip-inner">
+          <div class="flip-face flip-back"></div>
+          <div class="flip-face flip-front">${card.emoji}</div>
+        </div>`;
+      el.addEventListener('click', () => handleFlip(i, el));
+      el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleFlip(i, el); } });
+      card.el = el;
+      gridEl.appendChild(el);
+    });
+  }
+
+  function startTimer() {
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      elapsed++;
+      timerEl.textContent = fmtTime(elapsed);
+    }, 1000);
+  }
+
+  function handleFlip(i, el) {
+    const card = cards[i];
+    if (locked || card.flipped || card.matched) return;
+
+    // Start timer on first flip
+    if (flipped.length === 0 && moves === 0) startTimer();
+
+    card.flipped = true;
+    el.classList.add('flipped');
+    el.setAttribute('aria-label', card.emoji);
+    flipped.push(i);
+
+    if (flipped.length === 2) {
+      moves++;
+      movesEl.textContent = moves;
+      locked = true;
+      const [a, b] = flipped;
+      if (cards[a].emoji === cards[b].emoji) {
+        // Match
+        setTimeout(() => {
+          cards[a].el.classList.add('matched');
+          cards[b].el.classList.add('matched');
+          flipped = [];
+          locked = false;
+          matched++;
+          if (matched === EMOJIS.length) endGame();
+        }, 400);
+      } else {
+        // No match - flip back
+        setTimeout(() => {
+          cards[a].flipped = false; cards[b].flipped = false;
+          cards[a].el.classList.remove('flipped');
+          cards[b].el.classList.remove('flipped');
+          cards[a].el.setAttribute('aria-label', 'Card ' + (a+1));
+          cards[b].el.setAttribute('aria-label', 'Card ' + (b+1));
+          flipped = [];
+          locked = false;
+        }, 900);
+      }
+    }
+  }
+
+  function endGame() {
+    clearInterval(timerInterval);
+    const score = calcScore(moves, elapsed);
+    saveBest(score);
+    updateBestDisplay();
+    winScore.textContent = score + ' pts';
+    const best = loadBest();
+    winDetail.innerHTML = moves + ' moves &nbsp;|&nbsp; ' + fmtTime(elapsed) +
+      (score >= best && score > 0 && moves > 0 ? ' &nbsp;|&nbsp; <strong style="color:var(--yellow)">New best!</strong>' : '');
+    winOv.classList.remove('hidden');
+  }
+
+  function startGame() {
+    startOv.classList.add('hidden');
+    winOv.classList.add('hidden');
+    buildGrid();
+    updateBestDisplay();
+  }
+
+  document.getElementById('btn-start').addEventListener('click', startGame);
+  document.getElementById('btn-replay').addEventListener('click', startGame);
+
+  updateBestDisplay();
+  </script>
+</body>
+</html>

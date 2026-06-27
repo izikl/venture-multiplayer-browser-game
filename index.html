@@ -2,31 +2,26 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <title>Word Blitz — Free Multiplayer Word Game</title>
-  <meta name="description" content="Play Word Blitz — a free, instant multiplayer word unscrambling game. Share a room link and compete with friends. No account needed!">
-  <meta property="og:title" content="Word Blitz — Free Multiplayer Word Game">
-  <meta property="og:description" content="Race friends to unscramble words in real-time. Free, no login, share a link!">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blitz Arcade - Free Browser Games</title>
+  <meta name="description" content="Blitz Arcade: free skill-based browser games. Play Word Blitz, Snake Sprint, Memory Match and more. No account, no download, play instantly.">
+  <meta property="og:title" content="Blitz Arcade - Free Browser Games">
+  <meta property="og:description" content="Free skill-based browser games. Play instantly, no account needed.">
   <meta property="og:type" content="website">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔤</text></svg>">
-  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #0f1117;
-      --surface: #1a1d2e;
-      --surface2: #252840;
-      --primary: #6c63ff;
-      --primary-glow: #6c63ff44;
-      --accent: #ff6584;
-      --green: #43d98c;
-      --yellow: #ffd166;
-      --red: #ff6b6b;
-      --text: #e8eaf0;
+      --bg:         #0f1117;
+      --surface:    #1a1d2e;
+      --surface2:   #252840;
+      --primary:    #6c63ff;
+      --accent:     #ff6584;
+      --text:       #e8eaf0;
       --text-muted: #8b8fa8;
-      --border: #2e3154;
-      --radius: 12px;
+      --border:     #2e3154;
+      --radius:     14px;
       --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
     }
 
@@ -37,1638 +32,226 @@
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
       overflow-x: hidden;
     }
 
-    /* Animated background dots */
     body::before {
       content: '';
       position: fixed;
       inset: 0;
-      background-image: radial-gradient(circle, #6c63ff11 1px, transparent 1px);
+      background-image: radial-gradient(circle, #6c63ff0d 1px, transparent 1px);
       background-size: 40px 40px;
       pointer-events: none;
       z-index: 0;
     }
 
-    #app {
-      width: 100%;
-      max-width: 680px;
+    header {
       position: relative;
       z-index: 1;
-    }
-
-    /* ---- Screens ---- */
-    .screen { display: none; }
-    .screen.active { display: block; }
-
-    /* ---- Logo ---- */
-    .logo {
       text-align: center;
-      margin-bottom: 32px;
+      padding: 56px 20px 16px;
     }
-    .logo h1 {
-      font-size: clamp(2rem, 6vw, 3rem);
+
+    .brand-logo {
+      font-size: clamp(2.4rem, 7vw, 3.6rem);
       font-weight: 900;
-      background: linear-gradient(135deg, var(--primary), var(--accent));
+      background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
       letter-spacing: -1px;
+      line-height: 1.1;
     }
-    .logo p {
+
+    .brand-tag {
+      margin-top: 10px;
       color: var(--text-muted);
-      font-size: 0.95rem;
-      margin-top: 6px;
+      font-size: 1.05rem;
     }
 
-    /* ---- Card ---- */
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 28px;
-      margin-bottom: 16px;
-    }
-    .card h2 {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 16px;
-    }
-
-    /* ---- Inputs ---- */
-    input[type="text"] {
-      width: 100%;
-      background: var(--surface2);
-      border: 2px solid var(--border);
-      border-radius: 8px;
-      color: var(--text);
-      font-size: 1rem;
-      padding: 12px 16px;
-      outline: none;
-      transition: border-color 0.2s;
-      font-family: var(--font);
-    }
-    input[type="text"]:focus {
-      border-color: var(--primary);
-    }
-    input[type="text"].uppercase {
-      text-transform: uppercase;
-      letter-spacing: 3px;
-      font-size: 1.2rem;
-      font-weight: 700;
-      text-align: center;
-    }
-
-    /* ---- Buttons ---- */
-    button {
-      font-family: var(--font);
-      font-weight: 700;
-      font-size: 1rem;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      padding: 13px 24px;
-      transition: transform 0.1s, opacity 0.2s, box-shadow 0.2s;
-    }
-    button:active { transform: scale(0.97); }
-    button:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-
-    .btn-primary {
-      background: var(--primary);
-      color: white;
-      width: 100%;
-      box-shadow: 0 4px 20px var(--primary-glow);
-    }
-    .btn-primary:hover:not(:disabled) {
-      box-shadow: 0 6px 28px var(--primary-glow);
-    }
-    .btn-secondary {
-      background: var(--surface2);
-      color: var(--text);
-      width: 100%;
-      border: 1px solid var(--border);
-    }
-    .btn-secondary:hover:not(:disabled) {
-      background: var(--border);
-    }
-    .btn-small {
-      padding: 8px 16px;
-      font-size: 0.85rem;
-      width: auto;
-    }
-    .btn-success {
-      background: var(--green);
-      color: #0a1a12;
-    }
-
-    .btn-row {
+    .badge-row {
       display: flex;
+      justify-content: center;
       gap: 10px;
-      margin-top: 12px;
-    }
-    .btn-row button { flex: 1; }
-
-    /* ---- Divider ---- */
-    .divider {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      color: var(--text-muted);
-      font-size: 0.85rem;
-      margin: 20px 0;
-    }
-    .divider::before, .divider::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: var(--border);
+      flex-wrap: wrap;
+      margin-top: 18px;
     }
 
-    /* ---- Label ---- */
-    label {
-      display: block;
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: var(--text-muted);
-      margin-bottom: 6px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .field { margin-bottom: 16px; }
-
-    /* ---- Room code display ---- */
-    .room-code-display {
+    .badge {
       background: var(--surface2);
-      border: 2px solid var(--primary);
-      border-radius: var(--radius);
-      padding: 20px;
-      text-align: center;
-      margin-bottom: 16px;
-    }
-    .room-code-display .label {
-      font-size: 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: 0.8rem;
       color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    main {
+      position: relative;
+      z-index: 1;
+      flex: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 20px 60px;
+      width: 100%;
+    }
+
+    .section-heading {
+      font-size: 0.75rem;
       text-transform: uppercase;
       letter-spacing: 2px;
-      margin-bottom: 8px;
-    }
-    .room-code-display .code {
-      font-size: 2.5rem;
-      font-weight: 900;
-      letter-spacing: 8px;
-      color: var(--primary);
-      font-variant-numeric: tabular-nums;
-    }
-
-    /* ---- Player list ---- */
-    .player-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .player-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      background: var(--surface2);
-      border-radius: 8px;
-      padding: 10px 14px;
-    }
-    .player-avatar {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      color: var(--text-muted);
       font-weight: 700;
-      font-size: 0.9rem;
-      flex-shrink: 0;
-    }
-    .player-name { font-weight: 600; flex: 1; }
-    .player-badge {
-      font-size: 0.7rem;
-      background: var(--primary);
-      color: white;
-      padding: 2px 8px;
-      border-radius: 20px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .player-score {
-      font-weight: 700;
-      font-size: 1.1rem;
-      min-width: 60px;
-      text-align: right;
-      color: var(--yellow);
-    }
-
-    /* ---- Playing screen ---- */
-    .game-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-    }
-    .round-indicator {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      font-weight: 600;
-    }
-    .total-score {
-      font-size: 1.4rem;
-      font-weight: 900;
-      color: var(--yellow);
-    }
-
-    /* Timer bar */
-    .timer-wrap {
-      margin-bottom: 24px;
-    }
-    .timer-bar-bg {
-      background: var(--surface2);
-      border-radius: 99px;
-      height: 10px;
-      overflow: hidden;
-    }
-    .timer-bar {
-      height: 100%;
-      border-radius: 99px;
-      background: var(--green);
-      transition: width 0.1s linear, background 0.5s;
-    }
-    .timer-seconds {
-      text-align: right;
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      margin-top: 4px;
-    }
-
-    /* Scrambled word display */
-    .scramble-display {
-      text-align: center;
-      margin: 20px 0 28px;
-    }
-    .scramble-word {
-      font-size: clamp(2.5rem, 10vw, 4rem);
-      font-weight: 900;
-      letter-spacing: 8px;
-      color: var(--text);
-      text-transform: uppercase;
-      line-height: 1;
-      min-height: 1.2em;
-    }
-    .scramble-hint {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      margin-top: 8px;
-    }
-    .scramble-letters {
-      display: flex;
-      justify-content: center;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-    .scramble-letter {
-      background: var(--surface2);
-      border: 2px solid var(--border);
-      border-radius: 8px;
-      width: 52px;
-      height: 64px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.8rem;
-      font-weight: 900;
-      color: var(--text);
-      transition: transform 0.3s;
-    }
-
-    /* Answer input area */
-    .answer-area {
-      display: flex;
-      gap: 10px;
       margin-bottom: 20px;
     }
-    .answer-area input {
-      flex: 1;
-      font-size: 1.4rem;
-      font-weight: 700;
-      text-align: center;
-      text-transform: uppercase;
-      letter-spacing: 4px;
-    }
-    .answer-area button {
-      white-space: nowrap;
-      flex-shrink: 0;
-      width: auto;
-      padding: 12px 20px;
+
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 20px;
     }
 
-    /* Feedback flash */
-    .feedback {
-      text-align: center;
-      min-height: 2rem;
-      font-weight: 700;
-      font-size: 1.1rem;
-      transition: opacity 0.3s;
-    }
-    .feedback.correct { color: var(--green); }
-    .feedback.wrong { color: var(--red); }
-
-    /* Score sidebar on play screen */
-    .score-sidebar {
-      margin-top: 16px;
-    }
-    .score-sidebar h3 {
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--text-muted);
-      margin-bottom: 8px;
-    }
-    .score-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 0;
-      border-bottom: 1px solid var(--border);
-    }
-    .score-row:last-child { border-bottom: none; }
-    .score-rank {
-      width: 24px;
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      font-weight: 700;
-    }
-    .score-name {
-      flex: 1;
-      font-size: 0.9rem;
-      font-weight: 600;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .score-pts {
-      font-weight: 700;
-      color: var(--yellow);
-      font-size: 0.9rem;
-    }
-    .score-row.me .score-name { color: var(--primary); }
-
-    /* Round result overlay */
-    .round-result-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.85);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 100;
-      padding: 16px;
-    }
-    .round-result-card {
+    .game-card {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 28px;
-      width: 100%;
-      max-width: 400px;
-      text-align: center;
-    }
-    .correct-word {
-      font-size: 2rem;
-      font-weight: 900;
-      color: var(--green);
-      text-transform: uppercase;
-      letter-spacing: 6px;
-      margin: 12px 0;
-    }
-    .first-correct {
-      font-size: 0.9rem;
-      color: var(--text-muted);
-      margin-bottom: 16px;
-    }
-    .first-correct strong { color: var(--yellow); }
-
-    /* Game end screen */
-    .podium {
-      display: flex;
-      align-items: flex-end;
-      justify-content: center;
-      gap: 12px;
-      margin: 24px 0;
-    }
-    .podium-place {
+      padding: 28px 24px 24px;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      gap: 6px;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--text);
+      transition: transform 150ms cubic-bezier(0.2,0,0,1),
+                  box-shadow 150ms cubic-bezier(0.2,0,0,1),
+                  border-color 150ms;
+      position: relative;
+      overflow: hidden;
     }
-    .podium-avatar {
-      width: 52px;
-      height: 52px;
-      border-radius: 50%;
-      display: flex;
+
+    .game-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--card-accent, var(--primary));
+    }
+
+    .game-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 28px rgba(0,0,0,0.35);
+      border-color: var(--card-accent, var(--primary));
+    }
+
+    .game-card:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(108,99,255,0.5);
+    }
+
+    .card-emoji { font-size: 2.8rem; line-height: 1; }
+
+    .card-title {
+      font-size: 1.35rem;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+    }
+
+    .card-blurb {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+      flex: 1;
+    }
+
+    .card-play-btn {
+      display: inline-flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.4rem;
-      font-weight: 900;
-    }
-    .podium-name {
-      font-size: 0.85rem;
-      font-weight: 600;
-      max-width: 80px;
-      text-align: center;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .podium-score {
-      font-size: 0.8rem;
-      color: var(--yellow);
+      gap: 6px;
+      background: var(--card-accent, var(--primary));
+      color: #fff;
       font-weight: 700;
-    }
-    .podium-bar {
-      border-radius: 6px 6px 0 0;
-      width: 70px;
-    }
-    .podium-bar.p1 { background: #ffd700; height: 100px; }
-    .podium-bar.p2 { background: #c0c0c0; height: 72px; }
-    .podium-bar.p3 { background: #cd7f32; height: 50px; }
-    .podium-num {
-      color: var(--bg);
-      font-weight: 900;
-      font-size: 1.4rem;
-    }
-
-    /* Confetti */
-    .confetti-piece {
-      position: fixed;
-      width: 10px;
-      height: 10px;
-      border-radius: 2px;
-      pointer-events: none;
-      z-index: 200;
-      animation: fall linear forwards;
-    }
-    @keyframes fall {
-      to { transform: translateY(110vh) rotate(720deg); opacity: 0; }
-    }
-
-    /* Error message */
-    .error-msg {
-      background: #2a1010;
-      border: 1px solid var(--red);
+      font-size: 0.95rem;
+      padding: 11px 20px;
       border-radius: 8px;
-      color: var(--red);
-      padding: 12px 16px;
-      font-size: 0.9rem;
-      margin-top: 12px;
-      display: none;
+      margin-top: 4px;
+      transition: opacity 150ms;
+      min-height: 44px;
     }
-    .error-msg.show { display: block; }
 
-    /* Info message */
-    .info-msg {
-      background: var(--surface2);
-      border-radius: 8px;
-      color: var(--text-muted);
-      padding: 10px 14px;
-      font-size: 0.85rem;
+    .game-card:hover .card-play-btn { opacity: 0.85; }
+
+    footer {
+      position: relative;
+      z-index: 1;
       text-align: center;
-      margin-top: 10px;
+      padding: 24px 20px;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.82rem;
     }
 
-    /* Waiting status */
-    .waiting-dots::after {
-      content: '';
-      animation: dots 1.5s infinite;
-    }
-    @keyframes dots {
-      0% { content: ''; }
-      33% { content: '.'; }
-      66% { content: '..'; }
-      100% { content: '...'; }
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
 
-    /* Toast notification */
-    #toast {
-      position: fixed;
-      bottom: 24px;
-      left: 50%;
-      transform: translateX(-50%) translateY(80px);
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px 20px;
-      font-size: 0.9rem;
-      font-weight: 600;
-      transition: transform 0.3s;
-      z-index: 300;
-      white-space: nowrap;
-    }
-    #toast.show { transform: translateX(-50%) translateY(0); }
+    header { animation: fade-up 250ms cubic-bezier(0,0,0,1) both; }
+    .games-grid { animation: fade-up 250ms cubic-bezier(0,0,0,1) 80ms both; }
 
-    /* Responsive tweaks */
-    @media (max-width: 400px) {
-      .card { padding: 18px; }
-      .scramble-letter { width: 40px; height: 52px; font-size: 1.4rem; }
-    }
-
-    /* Connecting spinner */
-    .spinner {
-      display: inline-block;
-      width: 20px;
-      height: 20px;
-      border: 3px solid var(--border);
-      border-top-color: var(--primary);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin-right: 8px;
-      vertical-align: middle;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* Answered checkmark */
-    .answered-check {
-      color: var(--green);
-      font-size: 1.2rem;
-      margin-left: 4px;
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
     }
   </style>
 </head>
 <body>
-<div id="app">
-  <!-- LANDING SCREEN -->
-  <div id="screen-landing" class="screen active">
-    <div class="logo">
-      <h1>⚡ Word Blitz</h1>
-      <p>Multiplayer word unscrambling — no account needed!</p>
+  <header>
+    <div class="brand-logo">🎮 Blitz Arcade</div>
+    <p class="brand-tag">Free skill-based browser games. Play instantly.</p>
+    <div class="badge-row">
+      <span class="badge">No account needed</span>
+      <span class="badge">Free forever</span>
+      <span class="badge">No tracking</span>
     </div>
-    <div class="card">
-      <div class="field">
-        <label for="playerNameInput">Your Display Name (optional)</label>
-        <input type="text" id="playerNameInput" placeholder="Anonymous" maxlength="20" autocomplete="off" spellcheck="false">
-      </div>
-      <button class="btn-primary" id="createRoomBtn">⚡ Create Room</button>
-      <div class="divider">or</div>
-      <div class="field">
-        <label for="joinCodeInput">Room Code</label>
-        <input type="text" id="joinCodeInput" class="uppercase" placeholder="ABCDEF" maxlength="6" autocomplete="off" spellcheck="false">
-      </div>
-      <button class="btn-secondary" id="joinRoomBtn">Join Room →</button>
-      <div class="error-msg" id="landingError"></div>
-    </div>
-    <div class="card" style="text-align:center">
-      <p style="color:var(--text-muted);font-size:0.85rem">
-        🎮 Unscramble words faster than your friends!<br>
-        20 rounds · 25 seconds each · Skill-based scoring<br>
-        Free forever · No tracking · No signup
-      </p>
-    </div>
-  </div>
-
-  <!-- LOBBY SCREEN -->
-  <div id="screen-lobby" class="screen">
-    <div class="logo" style="margin-bottom:20px">
-      <h1>⚡ Word Blitz</h1>
-    </div>
-    <div class="card">
-      <div class="room-code-display">
-        <div class="label">Room Code</div>
-        <div class="code" id="lobbyRoomCode">XXXXXX</div>
-      </div>
-      <button class="btn-secondary" id="copyLinkBtn">📋 Copy Invite Link</button>
-      <div class="error-msg" id="lobbyError"></div>
-    </div>
-    <div class="card">
-      <h2>Players (<span id="playerCount">0</span>/8)</h2>
-      <ul class="player-list" id="playerList"></ul>
-      <div class="info-msg waiting-dots" id="lobbyWaiting" style="margin-top:14px">Waiting for players</div>
-    </div>
-    <div id="hostControls" style="display:none">
-      <button class="btn-primary" id="startGameBtn" disabled>Start Game</button>
-      <p style="text-align:center;font-size:0.8rem;color:var(--text-muted);margin-top:8px">Need at least 1 player to start</p>
-    </div>
-  </div>
-
-  <!-- PLAYING SCREEN -->
-  <div id="screen-playing" class="screen">
-    <div class="game-header">
-      <div class="round-indicator">Round <span id="currentRound">1</span> of <span id="totalRounds">20</span></div>
-      <div class="total-score">⭐ <span id="myScore">0</span></div>
-    </div>
-    <div class="timer-wrap">
-      <div class="timer-bar-bg">
-        <div class="timer-bar" id="timerBar" style="width:100%"></div>
-      </div>
-      <div class="timer-seconds"><span id="timerSeconds">25</span>s</div>
-    </div>
-    <div class="card">
-      <div class="scramble-display">
-        <div id="scrambleLetters" class="scramble-letters"></div>
-        <div class="scramble-hint">Unscramble the word</div>
-      </div>
-      <div class="answer-area">
-        <input type="text" id="answerInput" class="uppercase" placeholder="Type your answer..." autocomplete="off" spellcheck="false">
-        <button class="btn-primary" id="submitAnswerBtn" style="width:auto">✓</button>
-      </div>
-      <div class="feedback" id="feedback"></div>
-    </div>
-    <div class="card score-sidebar">
-      <h3>Scoreboard</h3>
-      <div id="livescoreList"></div>
-    </div>
-  </div>
-
-  <!-- ROUND RESULT OVERLAY (hidden until round ends) -->
-  <div id="roundResultOverlay" style="display:none" class="round-result-overlay">
-    <div class="round-result-card">
-      <div style="font-size:0.85rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">The Word Was</div>
-      <div class="correct-word" id="resultWord">MAGIC</div>
-      <div class="first-correct" id="resultFirstCorrect"></div>
-      <div id="resultScoreList" style="margin-bottom:16px"></div>
-      <div style="font-size:0.8rem;color:var(--text-muted)" id="nextRoundCountdown">Next round in 3...</div>
-    </div>
-  </div>
-
-  <!-- GAME END SCREEN -->
-  <div id="screen-end" class="screen">
-    <div class="logo" style="margin-bottom:20px">
-      <h1>🏆 Game Over!</h1>
-    </div>
-    <div class="card">
-      <div class="podium" id="podium"></div>
-      <div class="player-list" id="finalScoreList" style="margin-top:16px"></div>
-    </div>
-    <div class="btn-row">
-      <button class="btn-primary" id="playAgainBtn" style="display:none">🔄 Play Again</button>
-      <button class="btn-secondary" id="newGameBtn">🏠 New Game</button>
-    </div>
-  </div>
-</div>
-
-<div id="toast"></div>
-
-<script>
-'use strict';
-
-/* ====================================================
-   WORD BANK  (300 common English words, 4-7 letters)
-   These are common English words, not copyrighted.
-   ==================================================== */
-const WORD_BANK = [
-  // 4-letter words
-  'ABLE','ALSO','ARCH','ARMY','ARTS','ATOM','AUNT','AWAY',
-  'BACK','BAKE','BALL','BAND','BANK','BARN','BATH','BEAM',
-  'BEAR','BEAT','BEEF','BELL','BELT','BIRD','BITE','BLUE',
-  'BLUR','BOAT','BOLD','BOLT','BONE','BOOK','BOOM','BOOT',
-  'BORE','BORN','BOSS','BOTH','BOWL','BURN','BUSY','CAFE',
-  'CAGE','CAKE','CALL','CALM','CAMP','CARD','CARE','CART',
-  'CASE','CASH','CAST','CAVE','CHEF','CHIP','CHOP','CITY',
-  'CLAP','CLAY','CLIP','CLUB','CLUE','COAL','COAT','COIL',
-  'COIN','COLD','COME','COOK','COOL','COPY','CORE','COST',
-  'COZY','CROP','CUBE','CURL','CUTE','DARK','DART','DASH',
-  'DAWN','DAYS','DEAD','DEAR','DECK','DEED','DEEP','DEER',
-  'DESK','DINE','DIVE','DOCK','DOME','DONE','DOOR','DRAW',
-  'DREW','DROP','DRUM','DUSK','DUST','DUSK','DUTY','EACH',
-  'EARN','EASE','EDGE','ELSE','EVEN','EXAM','FACE','FACT',
-  'FAIL','FAIR','FALL','FAME','FARM','FAST','FATE','FEED',
-  'FEEL','FEET','FELL','FILE','FILL','FILM','FIND','FINE',
-  'FISH','FIST','FLAG','FLAT','FLEW','FLIP','FLOW','FOAM',
-  'FOLD','FOLK','FOND','FONT','FOOD','FOOL','FOOT','FORK',
-  'FORM','FORT','FOUL','FREE','FROM','FUEL','FULL','FUND',
-  'FUSE','GAIN','GAME','GATE','GAVE','GEAR','GIFT','GIRL',
-  'GIVE','GLAD','GLOW','GLUE','GOAT','GOAL','GOLD','GOLF',
-  'GONE','GOOD','GRAB','GRAM','GREW','GREY','GRID','GRIP',
-  'GROW','GULF','GUST','HALF','HALL','HAND','HANG','HARM',
-  'HAVE','HEAD','HEAL','HEAP','HEAT','HEEL','HELD','HELM',
-  'HELP','HERB','HERE','HIDE','HIGH','HILL','HINT','HIRE',
-  'HOLD','HOLE','HOME','HOPE','HORN','HOST','HOUR','HULL',
-  'HUMP','HUNT','HURT','IDEA','INTO','IRON','ITEM','JADE',
-  'JAIL','JAZZ','JOIN','JOKE','JUMP','JUST','KEEN','KEEP',
-  'KICK','KILL','KIND','KING','KNOT','KNOW','LACK','LAKE',
-  'LAMP','LAND','LANE','LAST','LATE','LEAD','LEAF','LEAK',
-  'LEAN','LEAP','LEND','LENS','LESS','LIFT','LIKE','LIME',
-  'LINE','LINK','LION','LIST','LIVE','LOAD','LOAN','LOCK',
-  'LONG','LOOK','LOOP','LORE','LOSS','LOUD','LOVE','LUCK',
-  'MADE','MAIL','MAIN','MAKE','MALL','MANY','MARK','MARS',
-  'MASK','MASS','MATH','MAZE','MEAL','MEAT','MEET','MELT',
-  'MENU','MESH','MILD','MILK','MILL','MINE','MINT','MISS',
-  'MIST','MONK','MOON','MORE','MOST','MOVE','MUCH','MUST',
-  'MUTE','NAIL','NAME','NAVY','NEAR','NECK','NEED','NEWS',
-  'NEXT','NICE','NODE','NONE','NOON','NOPE','NORM','NOSE',
-  'NOTE','OBEY','OVEN','OVER','PACE','PACK','PAID','PAIN',
-  'PAIR','PALM','PARK','PART','PASS','PAST','PATH','PEAK',
-  'PEEL','PEER','PICK','PINE','PINK','PIPE','PLAN','PLAY',
-  'PLOW','PLUG','PLUM','PLUS','POEM','POLE','POND','POOL',
-  'POOR','POST','POUR','PREY','PROD','PULL','PUMP','PURE',
-  'PUSH','PUTS','RACE','RACK','RAGE','RAIL','RAIN','RANK',
-  'RARE','RAYS','READ','REAL','REEL','REST','RICE','RICH',
-  'RIDE','RING','RISE','RISK','ROAD','ROAM','ROAR','ROCK',
-  'ROLE','ROLL','ROOF','ROOM','ROOT','ROPE','RUIN','RULE',
-  'RUSH','RUST','SAFE','SAGE','SAIL','SAKE','SALT','SAME',
-  'SAND','SAVE','SCAN','SEAM','SEED','SELF','SELL','SEND',
-  'SHIP','SHOP','SHOT','SHOW','SHUT','SICK','SIDE','SIGN',
-  'SILK','SINK','SIZE','SKIP','SLAM','SLIM','SLOW','SLUG',
-  'SNAP','SNOW','SOAP','SOCK','SOFT','SOIL','SOLD','SOLE',
-  'SOME','SONG','SOON','SORT','SOUL','SOUR','SPIN','SPIT',
-  'SPOT','STAR','STAY','STEP','STEM','STIR','STOP','STRAP',
-  'STUB','SUCH','SUIT','SURE','SWIM','TALL','TAME','TANK',
-  'TASK','TEAM','TEAR','TELL','TEND','TENT','TEST','TEXT',
-  'THAN','THEN','THEY','THIN','THIS','TIDE','TIDY','TIED',
-  'TILE','TILL','TINY','TIRE','TOLD','TOLL','TONE','TOOK',
-  'TOOL','TOPS','TOSS','TOUR','TOWN','TRAP','TREE','TRIO',
-  'TRIP','TROD','TRUE','TUBE','TUNE','TURN','TWIN','TYPE',
-  'UGLY','UNDO','UNIT','UPON','USED','VAST','VERY','VIEW',
-  'VINE','VISA','VOID','VOTE','WADE','WAGE','WAKE','WALK',
-  'WALL','WANT','WARM','WARN','WARP','WARY','WAVE','WEAR',
-  'WEED','WEEK','WELL','WENT','WERE','WEST','WHEN','WIDE',
-  'WILD','WILL','WIND','WING','WISE','WISH','WITH','WOKE',
-  'WOLF','WONT','WOOD','WOOL','WORD','WORE','WORN','WRAP',
-  'WREN','YARD','YEAR','YELL','YOUR','ZERO','ZONE','ZOOM',
-
-  // 5-letter words
-  'ABOUT','ABOVE','ABUSE','ACUTE','ADULT','AFTER','AGAIN','AISLE',
-  'ALARM','ALBUM','ALIEN','ALIVE','ALLEY','ALLOW','ALONE','ALONG',
-  'ALTAR','ALTER','ANGEL','ANGER','ANGLE','ANKLE','APART','APPLY',
-  'ARENA','ARGUE','ARISE','ARMOR','ARROW','ATLAS','AWFUL',
-  'BADGE','BAKER','BASIC','BATCH','BEACH','BELOW','BENCH','BIBLE',
-  'BLANK','BLAST','BLAZE','BLEED','BLEND','BLESS','BLIND','BLOCK',
-  'BLOOM','BLOWN','BOARD','BOOST','BOOTH','BRACE','BRAIN','BRAKE',
-  'BRAVE','BREAD','BREAK','BREED','BRIDE','BRIEF','BRING','BROAD',
-  'BROOK','BROWN','BRUSH','BUILD','BULGE','BULLY','BURST','BUYER',
-  'CABIN','CACHE','CAMEL','CANAL','CANDY','CARRY','CATCH','CAUSE',
-  'CEDAR','CHAIR','CHALK','CHAOS','CHARM','CHASE','CHEAP','CHEER',
-  'CHESS','CHEST','CHIEF','CHILD','CHINA','CIVIC','CIVIL','CLAIM',
-  'CLASS','CLEAN','CLEAR','CLERK','CLICK','CLIMB','CLONE','CLOSE',
-  'CLOTH','CLOUD','CLOWN','COACH','COAST','COLOR','COMET','COMIC',
-  'COMMA','CORAL','COUNT','COURT','COVER','CRACK','CRASH','CRAZY',
-  'CREAM','CREEK','CRIME','CRISP','CROSS','CROWD','CROWN','CRUEL',
-  'CRUMB','CRUSH','CURVE','DAILY','DAIRY','DANCE','DATUM','DECAY',
-  'DECOY','DEPOT','DEPTH','DERBY','DEVIL','DIARY','DIRTY','DISCO',
-  'DIZZY','DODGE','DOING','DOUBT','DOUGH','DRAFT','DRAIN','DRAMA',
-  'DRAPE','DRAWL','DREAM','DRESS','DRIFT','DRILL','DRINK','DRIVE',
-  'DRONE','DROOL','DROVE','DROWN','DUCHY','EAGLE','EARLY','EARTH',
-  'EIGHT','EMPTY','ENEMY','ENJOY','ENTER','ENTRY','EQUAL','ERROR',
-  'ESSAY','EVERY','EXACT','EXIST','EXTRA','FABLE','FAITH','FALSE',
-  'FANCY','FATAL','FAULT','FAVOR','FEAST','FEVER','FIBER','FIELD',
-  'FIFTH','FIFTY','FIGHT','FINAL','FIRST','FIXED','FLAME','FLANK',
-  'FLASH','FLASK','FLECK','FLESH','FLING','FLOAT','FLOOD','FLOOR',
-  'FLOSS','FLOUR','FLUTE','FOCAL','FOGGY','FORCE','FORGE','FORTH',
-  'FORUM','FOUND','FRAME','FRANK','FRAUD','FRESH','FRONT','FROST',
-  'FRUIT','FULLY','FUNNY','GIANT','GIVEN','GLASS','GLOBE','GLOOM',
-  'GLOSS','GLOVE','GRACE','GRADE','GRAIN','GRAND','GRANT','GRAPE',
-  'GRASP','GRASS','GRAVE','GRAZE','GREAT','GREED','GREEN','GREET',
-  'GRIEF','GRILL','GRIND','GROAN','GROSS','GROUP','GROVE','GUARD',
-  'GUESS','GUIDE','GUILE','GUILD','GUISE','GUSTO','HABIT','HAPPY',
-  'HARSH','HASTE','HAUNT','HAVEN','HEART','HEAVY','HEDGE','HEIST',
-  'HENCE','HERBS','HIKED','HINGE','HIPPO','HOIST','HORSE','HOTEL',
-  'HOUND','HOUSE','HOVER','HUMAN','HUMOR','HUNCH','HURRY','IMAGE',
-  'IMPLY','INDEX','INNER','INPUT','INTER','INTRO','JAPAN','JEWEL',
-  'JOINT','JOKER','JUDGE','JUICY','JUMBO','JUICE','KARMA','KNEEL',
-  'KNELT','KNIFE','KNOCK','KNOWN','LABEL','LARGE','LASER','LATER',
-  'LAUGH','LAYER','LEARN','LEASE','LEAST','LEGAL','LEMON','LEVEL',
-  'LIGHT','LIMIT','LINEN','LINER','LOCAL','LODGE','LOFTY','LOGIC',
-  'LOOSE','LOVER','LOWER','LUCKY','LUNAR','LUNCH','LYING','MAGIC',
-  'MAJOR','MANOR','MAPLE','MARCH','MARRY','MATCH','MAYOR','MEDIA',
-  'MERCY','MERGE','MERIT','METAL','MIGHT','MINOR','MINUS','MIXED',
-  'MONEY','MONTH','MORAL','MOTOR','MOUNT','MOUSE','MOUTH','MOVIE',
-  'MUDDY','MUSIC','NAIVE','NASTY','NEVER','NIGHT','NINJA','NOBLE',
-  'NOISE','NORTH','NOVEL','NURSE','NYMPH','OCEAN','OFFER','OLIVE',
-  'ONSET','OPERA','ORDER','OTHER','OUTER','OUNCE','OUTDO','OXIDE',
-  'OZONE','PACED','PAINT','PANIC','PANEL','PAPER','PATCH','PAUSE',
-  'PEACE','PEARL','PEDAL','PENNY','PERCH','PETTY','PHASE','PHONE',
-  'PHOTO','PIANO','PIECE','PILOT','PINCH','PIXEL','PIZZA','PLACE',
-  'PLAIN','PLANE','PLANT','PLATE','PLAZA','PLEAD','PLUCK','PLUMB',
-  'PLUME','PLUNK','POINT','POLAR','POSED','POWER','PRESS','PRICE',
-  'PRIDE','PRIME','PRINT','PRIOR','PRIZE','PROBE','PRONE','PROOF',
-  'PROSE','PROUD','PROVE','PROWL','PROXY','PRUNE','PSALM','PULSE',
-  'PUPIL','PURSE','QUERY','QUEUE','QUEST','QUICK','QUIET','QUOTA',
-  'QUOTE','RABBI','RADAR','RALLY','RANCH','RANGE','RAPID','RATIO',
-  'REACH','READY','REALM','REBEL','RECAP','RECON','REIGN','RELAX',
-  'REPAY','REPLY','RIDER','RIDGE','RIFLE','RIGHT','RISKY','RIVET',
-  'ROBOT','ROCKY','ROUGE','ROUGH','ROUND','ROUTE','ROYAL','RUGBY',
-  'RULER','RUNNY','RURAL','RUSTY','SAINT','SALAD','SANDY','SAUCE',
-  'SCALE','SCARE','SCENE','SCENT','SCORE','SCOUT','SCREW','SCRUB',
-  'SENSE','SERVE','SEVEN','SHAFT','SHAKE','SHALL','SHAME','SHAPE',
-  'SHARE','SHARK','SHARP','SHEAR','SHEEP','SHEER','SHELF','SHELL',
-  'SHIFT','SHINE','SHIRE','SHIRT','SHOCK','SHORE','SHORT','SHOUT',
-  'SIGHT','SINCE','SIXTH','SIXTY','SKILL','SKIRT','SKULL','SLACK',
-  'SLANT','SLASH','SLAVE','SLEEP','SLICE','SLIDE','SLOPE','SLUMP',
-  'SMART','SMELL','SMITE','SMOKE','SNACK','SNAKE','SNARE','SNEAK',
-  'SOLVE','SONIC','SORRY','SOUTH','SPACE','SPARE','SPARK','SPAWN',
-  'SPEAK','SPEAR','SPEED','SPEND','SPILL','SPITE','SPLIT','SPOKE',
-  'SPOON','SPORT','SPRAY','STACK','STAFF','STAGE','STAIN','STAKE',
-  'STALE','STALL','STAND','STARK','START','STATE','STEEL','STEEP',
-  'STEER','STERN','STICK','STIFF','STILL','STONE','STOOD','STORE',
-  'STORM','STORY','STOUT','STRAW','STRIP','STONE','STUDY','STUMP',
-  'STYLE','SUGAR','SUPER','SURGE','SWAMP','SWEAR','SWEEP','SWEET',
-  'SWIFT','SWIPE','SWORD','SWORE','TABLE','TASTE','TEACH','TENSE',
-  'THANK','THEME','THERE','THICK','THING','THORN','THOSE','THREE',
-  'THREW','THROW','THUMB','TIDAL','TIGER','TIGHT','TITLE','TODAY',
-  'TOOTH','TOTAL','TOUCH','TOUGH','TOWEL','TOXIC','TRACE','TRACK',
-  'TRADE','TRAIL','TRAIN','TRAIT','TRAMP','TRICK','TRIED','TROLL',
-  'TROOP','TROUT','TRUCK','TRULY','TRUMP','TRUNK','TRUST','TRUTH',
-  'TWICE','TWIST','ULTRA','UNDER','UNTIL','UPPER','UPSET','URBAN',
-  'USUAL','UTTER','VALOR','VALVE','VAPOR','VAULT','VENUE','VERSE',
-  'VIDEO','VIGOR','VIRAL','VISIT','VISTA','VITAL','VIVID','VISOR',
-  'VOCAL','VODKA','VOICE','VOUCH','WALTZ','WATCH','WATER','WEARY',
-  'WEDGE','WEIGH','WEIRD','WIELD','WITCH','WOMEN','WORLD','WORRY',
-  'WORSE','WORST','WORTH','WOULD','WOUND','WRATH','WRITE','WROTE',
-  'YACHT','YOUNG','YOURS','YOUTH','ZONED',
-].filter((w, i, a) => a.indexOf(w) === i); // deduplicate
-
-const COLORS = [
-  '#6c63ff','#ff6584','#43d98c','#ffd166','#4ecdc4',
-  '#ff8c42','#a29bfe','#fd79a8','#00b894','#fdcb6e'
-];
-
-/* ====================================================
-   GAME STATE
-   ==================================================== */
-const G = {
-  phase: 'landing',
-  isHost: false,
-  roomCode: '',
-  playerName: '',
-  playerId: '',
-  myColor: COLORS[0],
-  peer: null,
-  connections: {},    // peerId → DataConnection (host only)
-  hostConn: null,     // client → host DataConnection
-  players: {},        // peerId → { name, score, color, answered }
-  wordList: [],       // host: words for this game
-  currentWord: '',    // host
-  scrambled: '',
-  round: 0,
-  totalRounds: 20,
-  roundDeadline: 0,
-  timerInterval: null,
-  roundEndTimeout: null,
-  myAnsweredThisRound: false,
-  answeredThisRound: {}, // host: peerId → { correct, points }
-  firstCorrect: null, // peerId who answered first
-};
-
-/* ====================================================
-   UTILITIES
-   ==================================================== */
-function scrambleWord(word) {
-  let arr = word.split(''), tries = 0, out;
-  do {
-    out = arr.slice();
-    for (let i = out.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [out[i], out[j]] = [out[j], out[i]];
-    }
-    tries++;
-  } while (out.join('') === word && tries < 20);
-  return out.join('');
-}
-
-function genRoomCode() {
-  return Array.from({ length: 6 }, () => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[Math.floor(Math.random() * 26)]).join('');
-}
-
-function hostPeerId(code) {
-  return 'wordblitz-' + code.toLowerCase();
-}
-
-function pickColor(index) {
-  return COLORS[index % COLORS.length];
-}
-
-function initials(name) {
-  return (name || '?').trim().slice(0, 2).toUpperCase();
-}
-
-function showToast(msg, duration = 2500) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), duration);
-}
-
-function showError(elemId, msg) {
-  const el = document.getElementById(elemId);
-  if (!el) return;
-  el.textContent = msg;
-  el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 4000);
-}
-
-function clearError(elemId) {
-  const el = document.getElementById(elemId);
-  if (el) el.classList.remove('show');
-}
-
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById('screen-' + id).classList.add('active');
-  G.phase = id;
-}
-
-/* ====================================================
-   PEER JS
-   ==================================================== */
-function initPeer(id) {
-  return new Promise((resolve, reject) => {
-    const peer = new Peer(id || undefined, {
-      config: {
-        iceServers: [
-          { urls: 'stun:stun.l.google.com:19302' },
-          { urls: 'stun:stun1.l.google.com:19302' }
-        ]
-      }
-    });
-    peer.on('open', (myId) => resolve({ peer, myId }));
-    peer.on('error', (err) => {
-      if (err.type === 'unavailable-id') {
-        reject({ type: 'unavailable-id', err });
-      } else {
-        reject({ type: err.type, err });
-      }
-    });
-  });
-}
-
-/* ====================================================
-   MESSAGING
-   ==================================================== */
-function broadcast(msg) {
-  Object.values(G.connections).forEach(conn => {
-    if (conn.open) conn.send(msg);
-  });
-}
-
-function sendToHost(msg) {
-  if (G.hostConn && G.hostConn.open) G.hostConn.send(msg);
-}
-
-/* ====================================================
-   HOST HANDLERS
-   ==================================================== */
-function handleClientMsg(peerId, msg) {
-  if (msg.type === 'join') {
-    const index = Object.keys(G.players).length;
-    G.players[peerId] = { name: msg.name || 'Player', score: 0, color: pickColor(index), answered: false };
-    broadcastLobbyState();
-  } else if (msg.type === 'answer') {
-    hostHandleAnswer(peerId, msg.word);
-  }
-}
-
-function broadcastLobbyState() {
-  const state = {
-    type: 'lobby',
-    players: G.players,
-    round: G.round,
-    totalRounds: G.totalRounds
-  };
-  broadcast(state);
-  renderLobby();
-}
-
-function hostHandleAnswer(peerId, word) {
-  if (G.phase !== 'playing') return;
-  if (G.answeredThisRound[peerId]) return;
-  const correct = word.trim().toUpperCase() === G.currentWord;
-  if (correct) {
-    const timeLeft = Math.max(0, G.roundDeadline - Date.now());
-    const fraction = timeLeft / 25000;
-    const pts = Math.round(100 + 900 * fraction);
-    G.answeredThisRound[peerId] = { correct: true, pts };
-    G.players[peerId].score += pts;
-    if (!G.firstCorrect) G.firstCorrect = peerId;
-    broadcast({ type: 'player_correct', peerId, pts, scores: G.players });
-    // End round early if everyone answered
-    const total = Object.keys(G.players).length + 1; // +1 for host
-    const answeredCount = Object.keys(G.answeredThisRound).length + (G.myAnsweredThisRound ? 1 : 0);
-    if (answeredCount >= total) {
-      clearTimeout(G.roundEndTimeout);
-      G.roundEndTimeout = setTimeout(() => hostEndRound(), 800);
-    }
-  } else {
-    G.connections[peerId] && G.connections[peerId].send({ type: 'wrong' });
-  }
-}
-
-function hostStartGame() {
-  // Pick random words
-  const shuffled = WORD_BANK.slice().sort(() => Math.random() - 0.5);
-  G.wordList = shuffled.slice(0, G.totalRounds);
-  G.round = 0;
-  broadcast({ type: 'game_start', totalRounds: G.totalRounds });
-  // Also apply locally
-  applyGameStart(G.totalRounds);
-  setTimeout(() => hostNextRound(), 300);
-}
-
-function hostNextRound() {
-  if (G.round >= G.totalRounds) {
-    hostEndGame();
-    return;
-  }
-  G.currentWord = G.wordList[G.round];
-  G.scrambled = scrambleWord(G.currentWord);
-  G.round++;
-  G.answeredThisRound = {};
-  G.firstCorrect = null;
-  G.myAnsweredThisRound = false;
-  const deadline = Date.now() + 25000;
-  G.roundDeadline = deadline;
-
-  const roundMsg = {
-    type: 'round',
-    round: G.round,
-    totalRounds: G.totalRounds,
-    scrambled: G.scrambled,
-    deadline
-  };
-  broadcast(roundMsg);
-  applyRound(roundMsg);
-
-  G.roundEndTimeout = setTimeout(() => hostEndRound(), 25200);
-}
-
-function hostEndRound() {
-  clearTimeout(G.roundEndTimeout);
-  clearInterval(G.timerInterval);
-  const result = {
-    type: 'round_result',
-    word: G.currentWord,
-    firstCorrect: G.firstCorrect,
-    results: G.answeredThisRound,
-    scores: G.players
-  };
-  broadcast(result);
-  applyRoundResult(result);
-}
-
-function hostEndGame() {
-  clearTimeout(G.roundEndTimeout);
-  clearInterval(G.timerInterval);
-  const sorted = [...Object.entries(G.players), [G.playerId, { name: G.playerName || 'Host', score: G.players[G.playerId]?.score || 0, color: G.myColor }]]
-    .sort((a, b) => b[1].score - a[1].score);
-  // Add host to players for final display
-  if (!G.players[G.playerId]) {
-    G.players[G.playerId] = { name: G.playerName || 'Host', score: 0, color: G.myColor };
-  }
-  const endMsg = { type: 'game_end', scores: G.players };
-  broadcast(endMsg);
-  applyGameEnd(endMsg);
-}
-
-/* ====================================================
-   CLIENT HANDLERS
-   ==================================================== */
-function handleHostMsg(msg) {
-  if (msg.type === 'lobby') {
-    G.players = msg.players;
-    renderLobby();
-  } else if (msg.type === 'game_start') {
-    applyGameStart(msg.totalRounds);
-  } else if (msg.type === 'round') {
-    applyRound(msg);
-  } else if (msg.type === 'player_correct') {
-    G.players = msg.scores;
-    applyPlayerCorrect(msg);
-  } else if (msg.type === 'wrong') {
-    flashFeedback('wrong', '✗ Not quite!');
-  } else if (msg.type === 'round_result') {
-    applyRoundResult(msg);
-  } else if (msg.type === 'game_end') {
-    applyGameEnd(msg);
-  }
-}
-
-/* ====================================================
-   GAME STATE APPLIERS (both host & client)
-   ==================================================== */
-function applyGameStart(totalRounds) {
-  G.totalRounds = totalRounds;
-  G.round = 0;
-  showScreen('playing');
-  document.getElementById('totalRounds').textContent = totalRounds;
-}
-
-function applyRound(msg) {
-  G.scrambled = msg.scrambled;
-  G.round = msg.round;
-  G.roundDeadline = msg.deadline;
-  G.myAnsweredThisRound = false;
-
-  document.getElementById('currentRound').textContent = G.round;
-  document.getElementById('totalRounds').textContent = G.totalRounds;
-  document.getElementById('feedback').textContent = '';
-  document.getElementById('feedback').className = 'feedback';
-  document.getElementById('answerInput').value = '';
-  document.getElementById('answerInput').disabled = false;
-  document.getElementById('submitAnswerBtn').disabled = false;
-  document.getElementById('answerInput').focus();
-
-  renderScramble(msg.scrambled);
-  startTimer(msg.deadline);
-  document.getElementById('roundResultOverlay').style.display = 'none';
-  renderLiveScores();
-}
-
-function renderScramble(word) {
-  const container = document.getElementById('scrambleLetters');
-  container.innerHTML = '';
-  word.split('').forEach(letter => {
-    const div = document.createElement('div');
-    div.className = 'scramble-letter';
-    div.textContent = letter;
-    container.appendChild(div);
-  });
-}
-
-function startTimer(deadline) {
-  clearInterval(G.timerInterval);
-  const bar = document.getElementById('timerBar');
-  const secs = document.getElementById('timerSeconds');
-  G.timerInterval = setInterval(() => {
-    const remaining = Math.max(0, deadline - Date.now());
-    const pct = (remaining / 25000) * 100;
-    bar.style.width = pct + '%';
-    bar.style.background = pct > 50 ? 'var(--green)' : pct > 20 ? 'var(--yellow)' : 'var(--red)';
-    secs.textContent = Math.ceil(remaining / 1000);
-    if (remaining <= 0) clearInterval(G.timerInterval);
-  }, 100);
-}
-
-function flashFeedback(type, msg) {
-  const el = document.getElementById('feedback');
-  el.textContent = msg;
-  el.className = 'feedback ' + type;
-}
-
-function applyPlayerCorrect(msg) {
-  if (msg.peerId === G.playerId) {
-    flashFeedback('correct', '✓ +' + msg.pts + ' pts!');
-    G.myAnsweredThisRound = true;
-    document.getElementById('answerInput').disabled = true;
-    document.getElementById('submitAnswerBtn').disabled = true;
-  } else {
-    const pName = G.players[msg.peerId]?.name || 'Someone';
-    showToast('⚡ ' + pName + ' got it! +' + msg.pts, 1500);
-  }
-  renderLiveScores();
-  updateMyScore();
-}
-
-function applyRoundResult(msg) {
-  clearInterval(G.timerInterval);
-  clearTimeout(G.roundEndTimeout);
-  G.players = msg.scores;
-  if (G.isHost && !G.players[G.playerId]) {
-    G.players[G.playerId] = { name: G.playerName || 'Host', score: G.myScore || 0, color: G.myColor };
-  }
-
-  // Show overlay
-  const overlay = document.getElementById('roundResultOverlay');
-  document.getElementById('resultWord').textContent = msg.word;
-
-  const firstId = msg.firstCorrect;
-  const firstEl = document.getElementById('resultFirstCorrect');
-  if (firstId) {
-    const firstPName = firstId === G.playerId ? 'You' : (G.players[firstId]?.name || 'Someone');
-    firstEl.innerHTML = '⚡ <strong>' + firstPName + '</strong> was first!';
-  } else {
-    firstEl.textContent = 'Nobody got it this round!';
-  }
-
-  // Score list in overlay
-  const scoreListEl = document.getElementById('resultScoreList');
-  const sortedPlayers = Object.entries(msg.scores)
-    .sort((a, b) => b[1].score - a[1].score);
-  scoreListEl.innerHTML = sortedPlayers.map(([id, p]) => {
-    const roundPts = msg.results && msg.results[id] ? msg.results[id].pts : 0;
-    const isMe = id === G.playerId;
-    return `<div class="score-row${isMe ? ' me' : ''}">
-      <div class="score-rank"></div>
-      <div class="score-name">${escHtml(p.name)}${isMe ? ' (you)' : ''}</div>
-      <div class="score-pts">${roundPts ? '+' + roundPts : ''}</div>
-      <div class="player-score">${p.score}</div>
-    </div>`;
-  }).join('');
-
-  overlay.style.display = 'flex';
-  renderLiveScores();
-  updateMyScore();
-
-  // Countdown
-  let count = 3;
-  const cdEl = document.getElementById('nextRoundCountdown');
-  cdEl.textContent = 'Next round in ' + count + '...';
-  const cdTimer = setInterval(() => {
-    count--;
-    if (count > 0) {
-      cdEl.textContent = 'Next round in ' + count + '...';
-    } else {
-      clearInterval(cdTimer);
-      overlay.style.display = 'none';
-      if (G.isHost) hostNextRound();
-    }
-  }, 1000);
-}
-
-function applyGameEnd(msg) {
-  clearInterval(G.timerInterval);
-  clearTimeout(G.roundEndTimeout);
-  document.getElementById('roundResultOverlay').style.display = 'none';
-  G.players = msg.scores;
-  showScreen('end');
-  renderEndScreen(msg.scores);
-  spawnConfetti();
-}
-
-function updateMyScore() {
-  const myPts = G.players[G.playerId]?.score ?? 0;
-  document.getElementById('myScore').textContent = myPts;
-}
-
-function renderLiveScores() {
-  const el = document.getElementById('livescoreList');
-  const sorted = Object.entries(G.players).sort((a, b) => b[1].score - a[1].score);
-  el.innerHTML = sorted.map(([id, p], i) => {
-    const isMe = id === G.playerId;
-    return `<div class="score-row${isMe ? ' me' : ''}">
-      <div class="score-rank">${i + 1}</div>
-      <div class="score-name">${escHtml(p.name)}${isMe ? ' ★' : ''}</div>
-      <div class="score-pts">${p.score}</div>
-    </div>`;
-  }).join('');
-}
-
-function escHtml(s) {
-  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-}
-
-/* ====================================================
-   LOBBY RENDERING
-   ==================================================== */
-function renderLobby() {
-  const playerCount = Object.keys(G.players).length + (G.isHost ? 1 : 0);
-  document.getElementById('playerCount').textContent = playerCount;
-
-  const list = document.getElementById('playerList');
-  const items = [];
-
-  // Host entry
-  if (G.isHost) {
-    items.push({ id: G.playerId, name: G.playerName || 'Host', color: G.myColor, isHost: true, isMe: true });
-  }
-  Object.entries(G.players).forEach(([id, p]) => {
-    items.push({ id, name: p.name, color: p.color, isHost: false, isMe: id === G.playerId });
-  });
-
-  list.innerHTML = items.map(p => `
-    <li class="player-item">
-      <div class="player-avatar" style="background:${p.color}">${escHtml(initials(p.name))}</div>
-      <div class="player-name">${escHtml(p.name)}${p.isMe ? ' (you)' : ''}</div>
-      ${p.isHost ? '<div class="player-badge">Host</div>' : ''}
-    </li>
-  `).join('');
-
-  const waitEl = document.getElementById('lobbyWaiting');
-  const startBtn = document.getElementById('startGameBtn');
-  if (G.isHost) {
-    if (Object.keys(G.players).length >= 1) {
-      waitEl.textContent = 'Ready to start!';
-      waitEl.className = 'info-msg';
-      if (startBtn) startBtn.disabled = false;
-    } else {
-      waitEl.textContent = 'Waiting for players';
-      waitEl.className = 'info-msg waiting-dots';
-      if (startBtn) startBtn.disabled = true;
-    }
-  } else {
-    waitEl.textContent = 'Waiting for host to start';
-    waitEl.className = 'info-msg waiting-dots';
-  }
-}
-
-/* ====================================================
-   END SCREEN
-   ==================================================== */
-function renderEndScreen(scores) {
-  const sorted = Object.entries(scores).sort((a, b) => b[1].score - a[1].score);
-
-  // Podium (top 3)
-  const podium = document.getElementById('podium');
-  const order = sorted.length >= 2 ? [sorted[1], sorted[0], sorted[2]].filter(Boolean) : sorted;
-  const barClass = ['p2','p1','p3'];
-  podium.innerHTML = order.map((entry, i) => {
-    if (!entry) return '';
-    const [id, p] = entry;
-    const rank = sorted.findIndex(e => e[0] === id) + 1;
-    const isMe = id === G.playerId;
-    return `<div class="podium-place">
-      <div class="podium-avatar" style="background:${p.color}">
-        ${rank === 1 ? '👑' : escHtml(initials(p.name))}
-      </div>
-      <div class="podium-name" style="${isMe ? 'color:var(--primary)' : ''}">
-        ${escHtml(p.name)}
-      </div>
-      <div class="podium-score">${p.score} pts</div>
-      <div class="podium-bar ${barClass[i]}">
-        <div class="podium-num">${rank}</div>
-      </div>
-    </div>`;
-  }).join('');
-
-  // Full list
-  const listEl = document.getElementById('finalScoreList');
-  listEl.innerHTML = sorted.map(([id, p], i) => {
-    const isMe = id === G.playerId;
-    return `<div class="player-item">
-      <div class="player-avatar" style="background:${p.color}">${escHtml(initials(p.name))}</div>
-      <div class="player-name">${escHtml(p.name)}${isMe ? ' (you)' : ''}</div>
-      <div class="player-score">${p.score} pts</div>
-    </div>`;
-  }).join('');
-
-  if (G.isHost) {
-    document.getElementById('playAgainBtn').style.display = '';
-  }
-}
-
-function spawnConfetti() {
-  const colors = ['#6c63ff','#ff6584','#43d98c','#ffd166','#4ecdc4','#ff8c42'];
-  for (let i = 0; i < 80; i++) {
-    setTimeout(() => {
-      const el = document.createElement('div');
-      el.className = 'confetti-piece';
-      el.style.cssText = `
-        left: ${Math.random() * 100}vw;
-        top: -10px;
-        background: ${colors[Math.floor(Math.random() * colors.length)]};
-        transform: rotate(${Math.random() * 360}deg);
-        animation-duration: ${1.5 + Math.random() * 2}s;
-        animation-delay: ${Math.random() * 0.5}s;
-        border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
-        width: ${6 + Math.random() * 8}px;
-        height: ${6 + Math.random() * 8}px;
-      `;
-      document.body.appendChild(el);
-      setTimeout(() => el.remove(), 4000);
-    }, i * 30);
-  }
-}
-
-/* ====================================================
-   SUBMIT ANSWER
-   ==================================================== */
-function submitAnswer() {
-  if (G.myAnsweredThisRound) return;
-  const input = document.getElementById('answerInput');
-  const word = input.value.trim().toUpperCase();
-  if (!word) return;
-
-  if (G.isHost) {
-    // Check locally
-    if (G.answeredThisRound[G.playerId]) return;
-    if (word === G.currentWord) {
-      const timeLeft = Math.max(0, G.roundDeadline - Date.now());
-      const pts = Math.round(100 + 900 * (timeLeft / 25000));
-      G.answeredThisRound[G.playerId] = { correct: true, pts };
-      if (!G.players[G.playerId]) {
-        G.players[G.playerId] = { name: G.playerName || 'Host', score: 0, color: G.myColor };
-      }
-      G.players[G.playerId].score = (G.players[G.playerId].score || 0) + pts;
-      if (!G.firstCorrect) G.firstCorrect = G.playerId;
-      G.myAnsweredThisRound = true;
-      flashFeedback('correct', '✓ +' + pts + ' pts!');
-      document.getElementById('answerInput').disabled = true;
-      document.getElementById('submitAnswerBtn').disabled = true;
-      broadcast({ type: 'player_correct', peerId: G.playerId, pts, scores: G.players });
-      renderLiveScores();
-      updateMyScore();
-      // Check if everyone answered
-      const total = Object.keys(G.connections).length + 1;
-      const answered = Object.keys(G.answeredThisRound).length;
-      if (answered >= total) {
-        clearTimeout(G.roundEndTimeout);
-        G.roundEndTimeout = setTimeout(() => hostEndRound(), 800);
-      }
-    } else {
-      flashFeedback('wrong', '✗ Not quite!');
-      input.value = '';
-    }
-  } else {
-    sendToHost({ type: 'answer', word });
-    input.value = '';
-  }
-}
-
-/* ====================================================
-   ENTRY POINTS
-   ==================================================== */
-async function createRoom() {
-  clearError('landingError');
-  const btn = document.getElementById('createRoomBtn');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span>Creating room...';
-
-  G.playerName = document.getElementById('playerNameInput').value.trim() || 'Host';
-  G.isHost = true;
-
-  let tries = 0;
-  while (tries < 5) {
-    const code = genRoomCode();
+  </header>
+
+  <main>
+    <div class="section-heading">Choose a game</div>
+    <div class="games-grid" id="gamesGrid"></div>
+  </main>
+
+  <footer>
+    Blitz Arcade - free browser games, skill-based, privacy-safe.
+  </footer>
+
+  <script>
+  (async () => {
+    const grid = document.getElementById('gamesGrid');
+    let games;
     try {
-      const { peer, myId } = await initPeer(hostPeerId(code));
-      G.peer = peer;
-      G.playerId = myId;
-      G.roomCode = code;
-      G.myColor = pickColor(0);
-
-      // Handle incoming connections
-      peer.on('connection', (conn) => {
-        conn.on('open', () => {
-          if (Object.keys(G.connections).length >= 7) {
-            conn.send({ type: 'error', msg: 'Room full' });
-            conn.close();
-            return;
-          }
-          G.connections[conn.peer] = conn;
-          conn.on('data', (data) => handleClientMsg(conn.peer, data));
-          conn.on('close', () => {
-            delete G.connections[conn.peer];
-            delete G.players[conn.peer];
-            broadcastLobbyState();
-          });
-        });
-      });
-
-      peer.on('disconnected', () => peer.reconnect());
-
-      // Update URL
-      const url = new URL(window.location.href);
-      url.searchParams.set('room', code);
-      history.replaceState({}, '', url.toString());
-
-      // Show lobby
-      document.getElementById('lobbyRoomCode').textContent = code;
-      document.getElementById('hostControls').style.display = '';
-      showScreen('lobby');
-      renderLobby();
-      break;
-    } catch (e) {
-      if (e.type === 'unavailable-id') {
-        tries++;
-        continue;
-      }
-      showError('landingError', 'Could not create room. Try again.');
-      break;
+      const r = await fetch('/games.json');
+      games = await r.json();
+    } catch (_) {
+      games = [];
     }
-  }
 
-  btn.disabled = false;
-  btn.textContent = '⚡ Create Room';
-}
-
-async function joinRoom() {
-  clearError('landingError');
-  const code = document.getElementById('joinCodeInput').value.trim().toUpperCase();
-  if (code.length !== 6) {
-    showError('landingError', 'Please enter a 6-letter room code.');
-    return;
-  }
-
-  const btn = document.getElementById('joinRoomBtn');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span>Connecting...';
-
-  G.playerName = document.getElementById('playerNameInput').value.trim() || 'Player';
-  G.isHost = false;
-  G.roomCode = code;
-
-  try {
-    const { peer, myId } = await initPeer();
-    G.peer = peer;
-    G.playerId = myId;
-    G.myColor = pickColor(Math.floor(Math.random() * COLORS.length));
-
-    const conn = peer.connect(hostPeerId(code), { reliable: true });
-    G.hostConn = conn;
-
-    conn.on('open', () => {
-      conn.send({ type: 'join', name: G.playerName });
-      document.getElementById('lobbyRoomCode').textContent = code;
-      showScreen('lobby');
-    });
-
-    conn.on('data', (data) => handleHostMsg(data));
-
-    conn.on('close', () => {
-      if (G.phase !== 'end') {
-        showToast('Disconnected from room');
-        showScreen('landing');
-      }
-    });
-
-    conn.on('error', () => showError('landingError', 'Failed to connect. Check the code and try again.'));
-
-    peer.on('error', (err) => {
-      if (err.type === 'peer-unavailable') {
-        showError('landingError', 'Room not found. Check the code and try again.');
-        btn.disabled = false;
-        btn.textContent = 'Join Room →';
-      }
-    });
-  } catch (e) {
-    showError('landingError', 'Connection failed. Please try again.');
-  }
-
-  btn.disabled = false;
-  btn.textContent = 'Join Room →';
-}
-
-/* ====================================================
-   DOM SETUP
-   ==================================================== */
-document.addEventListener('DOMContentLoaded', () => {
-  // Auto-fill room code from URL
-  const urlParams = new URLSearchParams(window.location.search);
-  const roomParam = urlParams.get('room');
-  if (roomParam) {
-    document.getElementById('joinCodeInput').value = roomParam.toUpperCase();
-  }
-
-  // Landing buttons
-  document.getElementById('createRoomBtn').addEventListener('click', createRoom);
-  document.getElementById('joinRoomBtn').addEventListener('click', joinRoom);
-
-  // Enter key on join input
-  document.getElementById('joinCodeInput').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') joinRoom();
-  });
-
-  // Copy link button
-  document.getElementById('copyLinkBtn').addEventListener('click', () => {
-    const url = new URL(window.location.href);
-    url.searchParams.set('room', G.roomCode);
-    navigator.clipboard.writeText(url.toString()).then(() => showToast('📋 Link copied!'));
-  });
-
-  // Start game button
-  document.getElementById('startGameBtn')?.addEventListener('click', () => {
-    if (G.isHost && Object.keys(G.players).length >= 1) {
-      hostStartGame();
+    if (!games.length) {
+      grid.innerHTML = '<p style="color:var(--text-muted)">Games loading...</p>';
+      return;
     }
-  });
 
-  // Answer submit
-  document.getElementById('submitAnswerBtn').addEventListener('click', submitAnswer);
-  document.getElementById('answerInput').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') submitAnswer();
-  });
-
-  // Play again (host only)
-  document.getElementById('playAgainBtn').addEventListener('click', () => {
-    // Reset scores
-    Object.keys(G.players).forEach(id => { G.players[id].score = 0; });
-    broadcast({ type: 'lobby', players: G.players });
-    showScreen('lobby');
-    renderLobby();
-  });
-
-  // New game
-  document.getElementById('newGameBtn').addEventListener('click', () => {
-    if (G.peer) { G.peer.destroy(); G.peer = null; }
-    G.connections = {};
-    G.hostConn = null;
-    G.players = {};
-    G.isHost = false;
-    G.roomCode = '';
-    const url = new URL(window.location.href);
-    url.searchParams.delete('room');
-    history.replaceState({}, '', url.toString());
-    showScreen('landing');
-  });
-
-  // Restore name from localStorage
-  const savedName = localStorage.getItem('wb_player_name');
-  if (savedName) document.getElementById('playerNameInput').value = savedName;
-
-  // Save name on change
-  document.getElementById('playerNameInput').addEventListener('input', (e) => {
-    if (e.target.value.trim()) localStorage.setItem('wb_player_name', e.target.value.trim());
-  });
-});
-</script>
+    grid.innerHTML = games.map(g => `
+      <a class="game-card" href="${g.route}" style="--card-accent:${g.accent}" data-game-id="${g.id}">
+        <div class="card-emoji">${g.emoji}</div>
+        <div class="card-title">${g.title}</div>
+        <div class="card-blurb">${g.blurb}</div>
+        <div class="card-play-btn">Play Now &#8594;</div>
+      </a>
+    `).join('');
+  })();
+  </script>
 </body>
 </html>

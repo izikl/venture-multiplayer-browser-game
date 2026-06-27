@@ -1,0 +1,26 @@
+[
+  {
+    "id": "word-blitz",
+    "title": "Word Blitz",
+    "emoji": "⚡",
+    "route": "/word-blitz",
+    "blurb": "Race friends to unscramble words in real-time. Multiplayer, no account needed.",
+    "accent": "#6c63ff"
+  },
+  {
+    "id": "snake",
+    "title": "Snake Sprint",
+    "emoji": "🐍",
+    "route": "/snake",
+    "blurb": "Eat pellets, grow longer, avoid yourself. Classic arcade skill game.",
+    "accent": "#43d98c"
+  },
+  {
+    "id": "memory",
+    "title": "Memory Match",
+    "emoji": "🃏",
+    "route": "/memory",
+    "blurb": "Flip cards and find all the pairs. Beat your time and best score.",
+    "accent": "#ffd166"
+  }
+]
