@@ -174,20 +174,15 @@
     .pad.p2 .fire-btn { border-color: var(--pink); color: var(--pink); }
 
     @media (pointer: coarse), (max-width: 760px) {
+      body { height: 100vh; height: 100dvh; padding: 0; justify-content: space-between; overflow: hidden; }
+      header, .hud { display: none; }
+      .hub-link { position: fixed; top: 8px; left: 8px; margin: 0; z-index: 40; padding: 5px 11px; font-size: 0.78rem; }
       .pad.show { display: flex; }
+      .pad { padding: 10px 4px; }
+      .dpad { grid-template-columns: repeat(3, 52px); grid-template-rows: repeat(3, 52px); gap: 7px; }
+      .dbtn { font-size: 1.45rem; }
+      .stage { max-width: min(96vw, calc((100dvh - 250px) * 1.4)); }
     }
-
-    .hint {
-      color: var(--text-muted);
-      font-size: 0.76rem;
-      margin-top: 10px;
-      text-align: center;
-      position: relative;
-      z-index: 1;
-      max-width: 588px;
-      line-height: 1.5;
-    }
-    .hint b { color: var(--text); }
 
     /* Full-screen modal overlays (start + result). Centered, scrollable, so the
        content can never overlap the board, HUD, or controls. */
@@ -273,7 +268,7 @@
     /* On a computer (mouse, wide), let the board fill the screen: scale it to the
        largest size that still fits the viewport height. */
     @media (min-width: 761px) and (pointer: fine) {
-      .stage, .hud { max-width: min(94vw, max(420px, calc((100vh - 235px) * 1.4))); }
+      .stage, .hud { max-width: min(94vw, max(420px, calc((100vh - 244px) * 1.4))); }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -310,7 +305,6 @@
       <button class="dbtn right" data-dir="right" aria-label="Player 2 right">&#9654;</button>
       <button class="dbtn down"  data-dir="down"  aria-label="Player 2 down">&#9660;</button>
     </div>
-    <button class="fire-btn" data-fire aria-label="Player 2 fire">FIRE</button>
   </div>
 
   <div class="stage">
@@ -325,11 +319,6 @@
       <button class="dbtn right" data-dir="right" aria-label="Player 1 right">&#9654;</button>
       <button class="dbtn down"  data-dir="down"  aria-label="Player 1 down">&#9660;</button>
     </div>
-    <button class="fire-btn" data-fire aria-label="Player 1 fire">FIRE</button>
-  </div>
-
-  <div class="hint">
-    <b>Keyboard:</b> Green moves with <b>W A S D</b> and fires with <b>Space</b>; Pink moves with the <b>Arrow keys</b> and fires with <b>Enter</b>. <b>Phone:</b> use the on-screen pads (two players hold opposite ends). Press <b>P</b> to pause.
   </div>
 
   <!-- Start overlay -->
@@ -358,16 +347,16 @@
         <div class="controls">
           <div class="ctrl-card p1">
             <div class="ctrl-head">Player 1 - Green</div>
-            <div class="ctrl-row">Keyboard: <b>W A S D</b> + <b>Space</b></div>
+            <div class="ctrl-row">Keyboard: <b>W A S D</b> to move, <b>Space</b> to fire</div>
             <div class="ctrl-row">Phone: <b>bottom</b> pad</div>
           </div>
           <div class="ctrl-card p2">
             <div class="ctrl-head">Player 2 - Pink</div>
-            <div class="ctrl-row">Keyboard: <b>Arrow keys</b> + <b>Enter</b></div>
+            <div class="ctrl-row">Keyboard: <b>Arrow keys</b> to move, <b>Enter</b> to fire</div>
             <div class="ctrl-row">Phone: <b>top</b> pad</div>
           </div>
         </div>
-        <p class="overlay-text small">On a phone, two players hold opposite ends: Green uses the bottom controls, Pink uses the top controls (they face you).</p>
+        <p class="overlay-text small">On a phone, two players hold opposite ends: Green uses the bottom pad, Pink the top pad (it faces you). Tap a direction to turn, and tap the way you are already heading to fire.</p>
         <button class="btn" id="btn-start-local">Start duel</button>
       </div>
 
@@ -458,6 +447,7 @@
       food: '#ffd166', shot: '#ffffff'
     };
     var INV = { up: 'down', down: 'up', left: 'right', right: 'left' };
+    var DIRS = Engine.DIRS;
 
     // mode: 'local' (two players, one device) | 'host' (online, you are P1) | 'client' (online, you are P2)
     var mode = 'local';
@@ -493,21 +483,34 @@
     function padPlayer(pos) { return mode === 'local' ? (pos === 'bottom' ? 1 : 2) : localPlayer; }
     function padInvert(pos) { return mode === 'local' && pos === 'top'; }
 
+    function dirName(v) {
+      if (!v) return null;
+      for (var k in DIRS) { if (DIRS[k].x === v.x && DIRS[k].y === v.y) return k; }
+      return null;
+    }
+    // The board direction the given player's snake is currently moving (head minus neck).
+    function currentDirName(player) {
+      if (mode === 'client') {
+        var rs = remoteState && remoteState.snakes && remoteState.snakes[player - 1];
+        if (!rs || !rs.cells || rs.cells.length < 2) return null;
+        return dirName({ x: rs.cells[0].x - rs.cells[1].x, y: rs.cells[0].y - rs.cells[1].y });
+      }
+      if (game && game.snakes[player - 1]) return dirName(game.snakes[player - 1].dir);
+      return null;
+    }
+
     function bindPad(padEl, pos) {
       padEl.querySelectorAll('[data-dir]').forEach(function (btn) {
         btn.addEventListener('pointerdown', function (e) {
           e.preventDefault();
           if (!running || paused) return;
+          var player = padPlayer(pos);
           var base = btn.getAttribute('data-dir');
           var dir = padInvert(pos) ? INV[base] : base;
-          inputDir(padPlayer(pos), dir);
+          // Tapping the way the snake is already heading fires; any other tap turns.
+          if (currentDirName(player) === dir) inputFire(player);
+          else inputDir(player, dir);
         });
-      });
-      var fb = padEl.querySelector('[data-fire]');
-      fb.addEventListener('pointerdown', function (e) {
-        e.preventDefault();
-        if (!running || paused) return;
-        inputFire(padPlayer(pos));
       });
     }
     bindPad(padTop, 'top');
