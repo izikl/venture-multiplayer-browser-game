@@ -192,3 +192,13 @@ test('snake-duel has no em dashes in player-facing text', () => {
   assert.strictEqual(raw.indexOf('\u2014'), -1, 'snake-duel must not use raw em dashes');
 });
 
+test('snake-duel supports keyboard, phone pads, and online play', () => {
+  const html = read('snake-duel/index.html');
+  assert.ok(html.includes('W A S D'), 'must mention the WASD keys');
+  assert.ok(html.includes('Arrow keys'), 'must mention the arrow keys');
+  assert.ok(/class="pad/.test(html), 'must include on-screen touch pads');
+  assert.ok(html.includes('peerjs'), 'must load PeerJS for online play');
+  assert.ok(html.includes('Create game') && html.includes('Join game'), 'must offer online create and join');
+  assert.ok(html.includes('/snake-duel/engine.js'), 'must load the engine');
+});
+

@@ -120,3 +120,13 @@ test('fire respects the cooldown', () => {
   t = 1000;
   assert.strictEqual(g.fire(1), true);
 });
+
+test('snapshot is a JSON-serializable board view for online play', () => {
+  const g = createGame({ rng: () => 0 });
+  const s = g.snapshot();
+  assert.strictEqual(s.status, 'playing');
+  assert.strictEqual(s.snakes.length, 2);
+  assert.strictEqual(s.snakes[0].cells.length, 3);
+  assert.ok(Array.isArray(s.food) && Array.isArray(s.projectiles));
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(s)), s);
+});

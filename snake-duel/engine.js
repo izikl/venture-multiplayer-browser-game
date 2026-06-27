@@ -247,11 +247,27 @@
       else if (d2) finish('p1');
     }
 
+    // A plain serializable view of the board, sent host -> client for online
+    // play so the client can render without running the engine itself.
+    function snapshot() {
+      return {
+        status: game.status,
+        cols: cfg.cols,
+        rows: cfg.rows,
+        snakes: game.snakes.map(function (s) {
+          return { color: s.color, cells: s.cells.map(function (c) { return { x: c.x, y: c.y }; }) };
+        }),
+        food: game.food.map(function (f) { return { x: f.x, y: f.y }; }),
+        projectiles: game.projectiles.map(function (p) { return { pos: { x: p.pos.x, y: p.pos.y } }; })
+      };
+    }
+
     game.setDir = setDir;
     game.fire = fire;
     game.tickSnakes = tickSnakes;
     game.tickProjectiles = tickProjectiles;
     game.spawnFood = spawnFood;
+    game.snapshot = snapshot;
     game._snakeById = snakeById;
 
     spawnFood();
