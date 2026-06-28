@@ -129,8 +129,17 @@
       display: none; align-items: center; gap: 6px; color: var(--text-muted); text-decoration: none;
       font-size: 0.8rem; font-weight: 600; padding: 6px 12px; border: 1px solid var(--border); border-radius: 20px;
     }
-    body.menu .hub-link { display: inline-flex; }
+    body.pregame .hub-link { display: inline-flex; }
     .hub-link:hover { color: var(--text); border-color: var(--green); }
+
+    /* ---- exit button (during a game / result) ---- */
+    .exit-btn {
+      position: fixed; top: calc(env(safe-area-inset-top) + 8px); left: 8px; z-index: 110;
+      display: none; align-items: center; gap: 6px; color: var(--text-muted); background: rgba(10, 12, 20, 0.7);
+      cursor: pointer; font-size: 0.8rem; font-weight: 600; padding: 6px 12px; border: 1px solid var(--border); border-radius: 20px;
+    }
+    body.session .exit-btn { display: inline-flex; }
+    .exit-btn:hover { color: var(--text); border-color: var(--pink); }
 
     /* ---- overlays / modals ---- */
     .overlay {
@@ -171,9 +180,10 @@
       border: 1px dashed var(--border); background: var(--surface2); color: var(--green);
       caret-color: var(--primary);
     }
-    .code-box:not([disabled]) { border-style: solid; color: var(--text); }
+    .code-box:not([readonly]) { border-style: solid; color: var(--text); }
     .code-box:focus { outline: none; border-color: var(--primary); }
     .code-box::placeholder { color: var(--text-muted); letter-spacing: 6px; }
+    .overlay.confirm { z-index: 115; }
 
     /* speed + accordion inside How to play */
     .speed-control { width: 100%; max-width: 300px; display: flex; flex-direction: column; gap: 6px; }
@@ -210,6 +220,7 @@
   </div>
 
   <a href="/" class="hub-link">&#8592; My Plays</a>
+  <button type="button" class="exit-btn" id="exitBtn">&#10005; Exit</button>
 
   <!-- Player 2 pad (top, rotated to face the player at the other end) -->
   <div class="pad p2" id="padTop">
@@ -244,7 +255,6 @@
         <button class="btn" id="btn-go-online">Play online</button>
         <button class="btn btn-secondary" id="btn-go-local">Play local</button>
       </div>
-      <a href="/" class="btn btn-secondary">Hub</a>
     </div>
   </div>
 
@@ -253,14 +263,13 @@
     <div class="card">
       <div class="overlay-title">Play online</div>
       <p class="overlay-text" id="onlineLabel">Invite a friend to your game, or join theirs.</p>
-      <input id="codeBox" class="code-box" inputmode="numeric" pattern="[0-9]*" maxlength="6" disabled placeholder="------">
+      <input id="codeBox" class="code-box" inputmode="numeric" pattern="[0-9]*" maxlength="6" readonly placeholder="------">
       <button class="btn" id="btn-online-go" hidden>Join game</button>
       <div class="btn-row" id="onlineButtons">
         <button class="btn" id="btn-invite">Invite a player</button>
         <button class="btn btn-secondary" id="btn-join">Join a player</button>
       </div>
       <p class="overlay-text small" id="onlineMsg"></p>
-      <a href="/" class="btn btn-secondary">Hub</a>
     </div>
   </div>
 
@@ -272,7 +281,18 @@
       <div class="btn-row">
         <button class="btn" id="btn-rematch">Play again</button>
         <button class="btn btn-secondary" id="btn-howto">How to play</button>
-        <a href="/" class="btn btn-secondary">Hub</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Leave confirmation -->
+  <div class="overlay confirm hidden" id="confirmOverlay">
+    <div class="card">
+      <div class="overlay-title">Leave the game?</div>
+      <p class="overlay-text">This will take you out of the current game and back to My Plays.</p>
+      <div class="btn-row">
+        <button class="btn btn-secondary" id="btn-stay">Stay in the game</button>
+        <a href="/" class="btn">Leave the game</a>
       </div>
     </div>
   </div>
@@ -509,7 +529,7 @@
       mode = m; localPlayer = (m === 'client') ? 2 : 1;
       game = Engine.createGame({ config: { cols: COLS, rows: ROWS } });
       remoteState = null; running = true; paused = false; lastSnakeStep = 0; lastProjStep = 0;
-      body.classList.remove('menu'); hideOverlays(); setupLayout();
+      body.classList.add('session'); body.classList.remove('pregame'); hideOverlays(); setupLayout();
       if (rafId) cancelAnimationFrame(rafId);
       rafId = requestAnimationFrame(engineStep);
       if (m === 'host') netSend({ t: 'state', s: game.snapshot() });
@@ -518,7 +538,7 @@
     function startHost() { startEngineGame('host'); }
     function beginClient() {
       mode = 'client'; localPlayer = 2; running = true; paused = false;
-      body.classList.remove('menu'); hideOverlays(); setupLayout();
+      body.classList.add('session'); body.classList.remove('pregame'); hideOverlays(); setupLayout();
       if (rafId) cancelAnimationFrame(rafId);
       rafId = requestAnimationFrame(clientStep);
     }
@@ -546,20 +566,21 @@
     function showOverlay(id) {
       hideOverlays();
       document.getElementById(id).classList.remove('hidden');
-      body.classList.add('menu');
     }
 
     function showLanding() {
       document.getElementById('btn-go-local').style.display = isPhone() ? 'none' : '';
+      body.classList.add('pregame'); body.classList.remove('session');
       showOverlay('landingOverlay');
     }
     function showOnline() {
       resetOnlineUi();
+      body.classList.add('pregame'); body.classList.remove('session');
       showOverlay('onlineOverlay');
     }
 
     // ---- How to play ----
-    var RULES = 'Each snake starts at 3 cubes. Eat food to grow, reach 6 cubes to win. Shoot the other snake to blow off a cube, a head shot pushes their head back, any other hit closes the gap. Hit a wall, the other snake, or yourself and you lose. Two heads colliding is a tie.';
+    var RULES = 'Each snake starts at 3 cubes. Eat food to grow, reach 6 cubes to win. Shoot the other snake to blow off a cube, a head shot pushes their head back, any other hit closes the gap. The board wraps, slide off one edge and you come back on the opposite side. Hit the other snake or yourself and you lose. Two heads colliding is a tie.';
     document.getElementById('rulesTextKbd').textContent = RULES;
     document.getElementById('rulesTextTouch').textContent = RULES;
     function showHowto() {
@@ -588,7 +609,7 @@
     function resetOnlineUi() {
       closePeer();
       onlineLabel.textContent = 'Invite a friend to your game, or join theirs.';
-      codeBox.value = ''; codeBox.setAttribute('disabled', ''); codeBox.placeholder = '------';
+      codeBox.value = ''; codeBox.setAttribute('readonly', ''); codeBox.placeholder = '------';
       onlineButtons.classList.remove('hidden'); onlineGoBtn.hidden = true; onlineMsg.textContent = '';
     }
     function closePeer() { try { if (net.peer) net.peer.destroy(); } catch (e) {} net.peer = null; net.conn = null; }
@@ -597,7 +618,7 @@
       if (!window.Peer) { onlineMsg.textContent = 'Online is unavailable right now. Please try again later.'; return; }
       onlineButtons.classList.add('hidden'); onlineGoBtn.hidden = true;
       onlineLabel.textContent = 'Tell your friend to join with this code.';
-      codeBox.setAttribute('disabled', ''); codeBox.value = '......';
+      codeBox.setAttribute('readonly', ''); codeBox.value = '......';
       onlineMsg.textContent = 'Setting up your room...';
       var attempts = 0;
       (function tryHost() {
@@ -621,9 +642,10 @@
     function joinMode() {
       onlineButtons.classList.add('hidden');
       onlineLabel.textContent = 'Enter the code you got from your friend.';
-      codeBox.removeAttribute('disabled'); codeBox.value = ''; codeBox.placeholder = '000000';
+      codeBox.removeAttribute('readonly'); codeBox.value = ''; codeBox.placeholder = '000000';
       onlineGoBtn.hidden = false; onlineMsg.textContent = '';
-      setTimeout(function () { codeBox.focus(); }, 50);
+      // Focus synchronously inside the user gesture so the mobile keyboard appears.
+      codeBox.focus();
     }
 
     function connectClient() {
@@ -688,7 +710,12 @@
     document.getElementById('btn-join').addEventListener('click', joinMode);
     document.getElementById('btn-online-go').addEventListener('click', connectClient);
     codeBox.addEventListener('input', function () { codeBox.value = codeBox.value.replace(/\D/g, '').slice(0, 6); });
-    codeBox.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !codeBox.disabled) connectClient(); });
+    codeBox.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !codeBox.readOnly) connectClient(); });
+    // Tapping the code box on the join/invite screen acts like the Join button: enable the digits and show the keyboard.
+    codeBox.addEventListener('click', function () {
+      if (!onlineButtons.classList.contains('hidden')) joinMode();
+      else if (!codeBox.readOnly) codeBox.focus();
+    });
 
     document.getElementById('btn-rematch').addEventListener('click', function () {
       if (mode === 'client') { netSend({ t: 'rematch' }); resultText.textContent = 'Asking the host for a rematch...'; }
@@ -697,6 +724,18 @@
     });
     document.getElementById('btn-howto').addEventListener('click', showHowto);
     document.getElementById('btn-howto-back').addEventListener('click', function () { showOverlay('resultOverlay'); });
+
+    // ---- exit confirmation ----
+    var confirmOverlay = document.getElementById('confirmOverlay');
+    var exitPausedGame = false;
+    document.getElementById('exitBtn').addEventListener('click', function () {
+      if (running && !paused && (mode === 'local' || mode === 'host')) { paused = true; exitPausedGame = true; }
+      confirmOverlay.classList.remove('hidden');
+    });
+    document.getElementById('btn-stay').addEventListener('click', function () {
+      confirmOverlay.classList.add('hidden');
+      if (exitPausedGame) { paused = false; exitPausedGame = false; }
+    });
 
     // ---- routing ----
     function start() {

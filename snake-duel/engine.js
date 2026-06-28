@@ -116,6 +116,11 @@
       return c.x >= 0 && c.x < cfg.cols && c.y >= 0 && c.y < cfg.rows;
     }
 
+    // The board wraps: a snake that slides off one edge reappears on the opposite edge.
+    function wrap(c) {
+      return { x: ((c.x % cfg.cols) + cfg.cols) % cfg.cols, y: ((c.y % cfg.rows) + cfg.rows) % cfg.rows };
+    }
+
     function setDir(player, name) {
       var s = snakeById(player);
       if (!s || !s.alive || game.status !== 'playing') return;
@@ -192,7 +197,7 @@
       var newHeads = {};
       living.forEach(function (s) {
         oldHeads[s.id] = s.cells[0];
-        newHeads[s.id] = add(s.cells[0], s.dir);
+        newHeads[s.id] = wrap(add(s.cells[0], s.dir));
       });
 
       // Advance each snake: prepend new head, grow if eating else drop tail.
@@ -225,7 +230,6 @@
       }
       living.forEach(function (s) {
         var head = s.cells[0];
-        if (!inBounds(head)) { dead[s.id] = true; return; }
         // self: head equals any other cube of itself
         for (var i = 1; i < s.cells.length; i++) {
           if (eq(s.cells[i], head)) { dead[s.id] = true; return; }

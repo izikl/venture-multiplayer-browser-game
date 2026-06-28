@@ -57,12 +57,13 @@ test('dropping to 0 cubes loses (shot away to nothing)', () => {
   assert.strictEqual(g.status, 'p1');
 });
 
-test('head into a wall loses', () => {
+test('head wraps around the edge instead of losing', () => {
   const g = quietGame();
   setSnake(g.snakes[0], [[g.cols - 1, MID], [g.cols - 2, MID], [g.cols - 3, MID]], 'right');
   setSnake(g.snakes[1], [[5, 1], [4, 1], [3, 1]], 'right');
   g.tickSnakes();
-  assert.strictEqual(g.status, 'p2'); // player 1 hit the wall
+  assert.strictEqual(g.status, 'playing'); // no wall death
+  assert.deepStrictEqual(g.snakes[0].cells[0], { x: 0, y: MID }); // slid out the right edge, back in the left
 });
 
 test('head into itself loses', () => {
