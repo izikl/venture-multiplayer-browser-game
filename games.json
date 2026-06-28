@@ -5,7 +5,10 @@
     "emoji": "⚡",
     "route": "/word-blitz",
     "blurb": "Race friends to unscramble words in real-time. Multiplayer, no account needed.",
-    "accent": "#6c63ff"
+    "accent": "#6c63ff",
+    "modes": [
+      "online"
+    ]
   },
   {
     "id": "snake",
@@ -29,6 +32,10 @@
     "emoji": "⚔️",
     "route": "/snake-duel",
     "blurb": "Two snakes duel head to head. Grow to 6 to win, or shoot your rival to pieces.",
-    "accent": "#ff7a45"
+    "accent": "#ff7a45",
+    "modes": [
+      "online",
+      "local"
+    ]
   }
 ]

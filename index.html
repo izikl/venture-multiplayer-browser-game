@@ -183,6 +183,12 @@
 
     .game-card:hover .card-play-btn { opacity: 0.85; }
 
+    .card-btn-row { display: flex; gap: 10px; margin-top: 4px; flex-wrap: wrap; }
+    .card-btn-row .card-play-btn { margin-top: 0; flex: 1 1 110px; }
+    .card-play-btn.ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .card-play-btn:hover { opacity: 0.88; }
+    .game-card.no-link { cursor: default; }
+
     footer {
       position: relative;
       z-index: 1;
@@ -245,14 +251,23 @@
       return;
     }
 
-    grid.innerHTML = games.map(g => `
-      <a class="game-card" href="${g.route}" style="--card-accent:${g.accent}" data-game-id="${g.id}">
+    grid.innerHTML = games.map(g => {
+      const inner = `
         <div class="card-emoji">${g.emoji}</div>
         <div class="card-title">${g.title}</div>
-        <div class="card-blurb">${g.blurb}</div>
-        <div class="card-play-btn">Play Now &#8594;</div>
-      </a>
-    `).join('');
+        <div class="card-blurb">${g.blurb}</div>`;
+      if (Array.isArray(g.modes) && g.modes.length) {
+        const small = Math.min(window.innerWidth, window.innerHeight) < 600;
+        let modes = g.modes;
+        if (small) modes = modes.filter(m => m === 'online');
+        if (!modes.length) modes = g.modes.slice(0, 1);
+        const btns = modes.map((m, i) =>
+          `<a class="card-play-btn${i > 0 ? ' ghost' : ''}" href="${g.route}?mode=${m}">Play ${m}</a>`
+        ).join('');
+        return `<div class="game-card no-link" style="--card-accent:${g.accent}" data-game-id="${g.id}">${inner}<div class="card-btn-row">${btns}</div></div>`;
+      }
+      return `<a class="game-card" href="${g.route}" style="--card-accent:${g.accent}" data-game-id="${g.id}">${inner}<div class="card-play-btn">Play Now &#8594;</div></a>`;
+    }).join('');
   })();
   </script>
 </body>

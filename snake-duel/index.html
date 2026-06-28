@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Snake Duel - My Plays</title>
-  <meta name="description" content="Snake Duel: two players duel head to head in a snake arena where you can also shoot the other snake. Grow to 6 to win. Play on one phone, on a keyboard, or online with a friend. Free, no account, on My Plays.">
+  <meta name="description" content="Snake Duel: two players duel head to head in a snake arena where you can also shoot the other snake. Grow to 6 to win. Play on a keyboard, on an iPad, or online with a friend. Free, no account, on My Plays.">
   <meta property="og:title" content="Snake Duel - My Plays">
-  <meta property="og:description" content="Two-player competitive snake with shooting. One phone, keyboard, or online. Grow to 6 cubes to win.">
+  <meta property="og:description" content="Two-player competitive snake with shooting. Keyboard, iPad, or online. Grow to 6 cubes to win.">
   <meta property="og:type" content="website">
   <link rel="canonical" href="https://myplays.net/snake-duel">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐍</text></svg>">
@@ -40,14 +40,16 @@
       background: var(--bg);
       color: var(--text);
       font-family: var(--font);
-      min-height: 100vh;
+      height: 100vh;
+      height: 100svh;
+      height: var(--app-height, 100svh);
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 0 12px 18px;
-      overflow-x: hidden;
+      justify-content: center;
+      overflow: hidden;
+      padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
     }
-
     body::before {
       content: '';
       position: fixed;
@@ -58,144 +60,61 @@
       z-index: 0;
     }
 
-    .hub-link {
-      align-self: flex-start;
-      margin: 14px 0 0;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      color: var(--text-muted);
-      text-decoration: none;
-      font-size: 0.85rem;
-      font-weight: 600;
-      padding: 7px 13px;
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      position: relative;
-      z-index: 2;
-    }
-    .hub-link:hover { color: var(--text); border-color: var(--green); }
-    .hub-link:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(67,217,140,0.4); }
-
-    header { text-align: center; padding: 12px 0 6px; position: relative; z-index: 1; }
-    .title {
-      font-size: clamp(1.6rem, 5.5vw, 2.4rem);
-      font-weight: 900;
-      letter-spacing: -0.5px;
-      background: linear-gradient(135deg, var(--green) 0%, var(--pink) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    .subtitle { color: var(--text-muted); font-size: 0.9rem; margin-top: 4px; }
-
-    .hud {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      width: 100%;
-      max-width: 588px;
-      min-width: 0;
-      margin: 6px auto 8px;
-      position: relative;
-      z-index: 1;
-    }
-    .player-panel {
-      flex: 1;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 8px 12px;
-    }
-    .player-panel.p1 { border-top: 3px solid var(--green); }
-    .player-panel.p2 { border-top: 3px solid var(--pink); }
-    .player-name { font-weight: 800; font-size: 0.85rem; }
-    .player-panel.p1 .player-name { color: var(--green); }
-    .player-panel.p2 .player-name { color: var(--pink); }
-    .pips { display: flex; gap: 5px; margin-top: 7px; }
-    .pip { width: 15px; height: 15px; border-radius: 4px; background: var(--surface2); border: 1px solid var(--border); }
-    .player-panel.p1 .pip.on { background: var(--green); border-color: var(--green); }
-    .player-panel.p2 .pip.on { background: var(--pink); border-color: var(--pink); }
-    .fire-state { margin-top: 7px; font-size: 0.7rem; color: var(--text-muted); font-weight: 600; }
-    .fire-state.ready { color: var(--yellow); }
-
-    .stage { position: relative; z-index: 1; width: 100%; max-width: 588px; min-width: 0; }
+    /* ---- board ---- */
+    .stage { position: relative; z-index: 1; width: 100%; display: flex; align-items: center; justify-content: center; }
     canvas {
-      display: block;
-      width: 100%;
-      max-width: 100%;
-      height: auto;
-      background: #0b0d14;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
+      display: block; width: 100%; max-width: 100%; height: auto;
+      background: #0b0d14; border: 1px solid var(--border); border-radius: var(--radius);
       touch-action: none;
     }
 
-    /* On-screen touch controls (two-sided for one-phone play). */
+    /* ---- touch pads ---- */
     .pad {
-      display: none;
-      width: 100%;
-      max-width: 588px;
-      min-width: 0;
-      align-items: center;
-      justify-content: space-around;
-      gap: 14px;
-      padding: 10px 4px;
-      position: relative;
-      z-index: 1;
-      touch-action: none;
-      user-select: none;
+      display: none; width: 100%; align-items: center; justify-content: center;
+      padding: 8px 4px; position: relative; z-index: 1; touch-action: none; user-select: none;
     }
-    .pad.p2 { transform: rotate(180deg); } /* faces the player at the other end */
+    .pad.show { display: flex; }
+    .pad.p2 { transform: rotate(180deg); }
     .dpad {
       display: grid;
-      grid-template-columns: repeat(3, 50px);
-      grid-template-rows: repeat(3, 50px);
-      gap: 6px;
+      grid-template-columns: repeat(3, 56px);
+      grid-template-rows: repeat(3, 56px);
+      gap: 9px;
     }
-    .dbtn, .fire-btn {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      color: var(--text);
-      border-radius: 50%;
-      font-size: 1.3rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      touch-action: none;
+    .dbtn {
+      position: relative;
+      background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+      border-radius: 50%; font-size: 1.5rem;
+      display: flex; align-items: center; justify-content: center; cursor: pointer; touch-action: none;
     }
-    .dbtn:active, .fire-btn:active { background: var(--primary); border-color: var(--primary); }
-    .pad.p1 .dbtn:active { background: var(--green); border-color: var(--green); }
-    .pad.p2 .dbtn:active { background: var(--pink); border-color: var(--pink); }
-    .dbtn.up    { grid-column: 2; grid-row: 1; }
-    .dbtn.left  { grid-column: 1; grid-row: 2; }
+    .dbtn.up { grid-column: 2; grid-row: 1; }
+    .dbtn.left { grid-column: 1; grid-row: 2; }
     .dbtn.right { grid-column: 3; grid-row: 2; }
-    .dbtn.down  { grid-column: 2; grid-row: 3; }
-    .fire-btn {
-      width: 92px; height: 92px; border-radius: 50%;
-      font-size: 0.95rem; font-weight: 800; letter-spacing: 0.5px;
-      flex-direction: column; gap: 2px;
+    .dbtn.down { grid-column: 2; grid-row: 3; }
+    .dbtn:active { background: var(--primary); border-color: var(--primary); }
+    .pad.p1 .dbtn:active, body.me-green .pad .dbtn:active { background: var(--green); border-color: var(--green); }
+    .pad.p2 .dbtn:active, body.me-pink .pad .dbtn:active { background: var(--pink); border-color: var(--pink); }
+    /* fire badge: rides on the button matching the snake's current heading */
+    .dbtn.fire::after {
+      content: '🔥';
+      position: absolute; top: -7px; right: -7px;
+      font-size: 0.85rem; line-height: 1; background: var(--bg);
+      border-radius: 50%; padding: 1px 2px;
+      animation: firepulse 0.7s ease-in-out infinite;
     }
-    .pad.p1 .fire-btn { border-color: var(--green); color: var(--green); }
-    .pad.p2 .fire-btn { border-color: var(--pink); color: var(--pink); }
+    @keyframes firepulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.25); } }
 
-    @media (pointer: coarse), (max-width: 760px) {
-      body { height: 100vh; height: 100svh; height: var(--app-height, 100svh); padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); justify-content: space-between; overflow: hidden; }
-      header, .hud { display: none; }
-      .hub-link { position: fixed; top: calc(env(safe-area-inset-top) + 6px); left: 8px; margin: 0; z-index: 40; padding: 5px 11px; font-size: 0.78rem; }
-      .pad.show { display: flex; }
-      .pad { padding: 8px 4px; }
-      .dpad { grid-template-columns: repeat(3, 52px); grid-template-rows: repeat(3, 52px); gap: 8px; }
-      .dbtn { font-size: 1.45rem; }
-      .stage { max-width: min(96vw, calc((var(--app-height, 100svh) - 420px) * 1.4)); }
-    }
+    /* ---- layouts ---- */
+    body.kbd { justify-content: center; }
+    body.kbd .pad { display: none !important; }
+    body.twopad { justify-content: space-between; }
+    body.onepad { justify-content: space-between; }
 
-    /* Keep phones in portrait: a full-screen notice asks the player to rotate. */
+    /* ---- portrait lock (touch devices in landscape) ---- */
     .rotate-notice { display: none; }
-    @media (orientation: landscape) and (max-height: 520px) and (pointer: coarse) {
+    @media (orientation: landscape) and (pointer: coarse) {
       .rotate-notice {
-        display: flex; position: fixed; inset: 0; z-index: 100;
+        display: flex; position: fixed; inset: 0; z-index: 120;
         background: var(--bg); color: var(--text);
         flex-direction: column; align-items: center; justify-content: center;
         text-align: center; padding: 24px; gap: 14px;
@@ -204,92 +123,80 @@
       .rotate-notice .rot-text { font-size: 1.05rem; color: var(--text-muted); max-width: 320px; line-height: 1.5; }
     }
 
-    /* Full-screen modal overlays (start + result). Centered, scrollable, so the
-       content can never overlap the board, HUD, or controls. */
+    /* ---- hub link (only on overlays/menus) ---- */
+    .hub-link {
+      position: fixed; top: calc(env(safe-area-inset-top) + 8px); left: 8px; z-index: 70;
+      display: none; align-items: center; gap: 6px; color: var(--text-muted); text-decoration: none;
+      font-size: 0.8rem; font-weight: 600; padding: 6px 12px; border: 1px solid var(--border); border-radius: 20px;
+    }
+    body.menu .hub-link { display: inline-flex; }
+    .hub-link:hover { color: var(--text); border-color: var(--green); }
+
+    /* ---- overlays / modals ---- */
     .overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 60;
-      background: rgba(10, 12, 20, 0.94);
-      display: flex;
-      overflow: auto;
-      padding: 20px 14px;
+      position: fixed; inset: 0; z-index: 80;
+      background: rgba(10, 12, 20, 0.96);
+      display: flex; overflow: auto; padding: 20px 14px;
     }
     .overlay.hidden { display: none; }
+    .hidden, [hidden] { display: none !important; }
     .card {
-      margin: auto;
-      max-width: 560px;
-      width: 100%;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 24px 22px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      gap: 14px;
+      margin: auto; max-width: 460px; width: 100%;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+      padding: 26px 22px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 16px;
     }
-    .overlay-title { font-size: 1.9rem; font-weight: 900; letter-spacing: -0.5px; }
-    .overlay-text { color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; }
+    .overlay-title {
+      font-size: 1.9rem; font-weight: 900; letter-spacing: -0.5px;
+      background: linear-gradient(135deg, var(--green) 0%, var(--pink) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .overlay-text { color: var(--text-muted); font-size: 0.92rem; line-height: 1.6; }
     .overlay-text.small { font-size: 0.78rem; }
-
-    .mode-tabs { display: flex; gap: 8px; background: var(--surface2); border-radius: 10px; padding: 4px; }
-    .mode-tab {
-      border: none; background: transparent; color: var(--text-muted);
-      font-weight: 700; font-size: 0.85rem; padding: 8px 18px; border-radius: 7px; cursor: pointer;
-    }
-    .mode-tab.active { background: var(--primary); color: #fff; }
-    .mode-panel.hidden { display: none; }
-    .mode-panel { display: flex; flex-direction: column; align-items: center; gap: 14px; width: 100%; }
-
-    .controls { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
-    .ctrl-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; min-width: 158px; }
-    .ctrl-card.p1 { border-top: 3px solid var(--green); }
-    .ctrl-card.p2 { border-top: 3px solid var(--pink); }
-    .ctrl-head { font-weight: 800; font-size: 0.85rem; margin-bottom: 6px; }
-    .ctrl-card.p1 .ctrl-head { color: var(--green); }
-    .ctrl-card.p2 .ctrl-head { color: var(--pink); }
-    .ctrl-row { font-size: 0.76rem; color: var(--text-muted); margin: 3px 0; }
-    .ctrl-row b { color: var(--text); font-weight: 700; }
-
-    .room-code {
-      font-size: 2.4rem; font-weight: 900; letter-spacing: 6px;
-      color: var(--green); background: var(--surface2);
-      border: 1px dashed var(--border); border-radius: 12px;
-      padding: 10px 18px; min-width: 180px;
-    }
-    .code-input {
-      font-size: 1.6rem; font-weight: 800; letter-spacing: 5px; text-align: center; text-transform: uppercase;
-      width: 200px; padding: 10px; border-radius: 10px; border: 1px solid var(--border);
-      background: var(--surface2); color: var(--text);
-    }
-    .code-input:focus { outline: none; border-color: var(--primary); }
 
     .btn {
       display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-      font-weight: 700; font-size: 0.95rem; padding: 12px 24px; border-radius: 8px;
-      border: none; cursor: pointer; min-height: 46px; text-decoration: none; color: #fff;
-      background: var(--primary); transition: opacity 150ms;
+      font-weight: 700; font-size: 0.98rem; padding: 13px 24px; border-radius: 9px;
+      border: none; cursor: pointer; min-height: 48px; text-decoration: none; color: #fff;
+      background: var(--primary); transition: opacity 150ms; width: 100%; max-width: 300px;
     }
-    .btn:hover { opacity: 0.88; }
+    .btn:hover { opacity: 0.9; }
     .btn:disabled { opacity: 0.45; cursor: default; }
     .btn:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(108,99,255,0.5); }
     .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
-    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+    .btn-row { display: flex; flex-direction: column; gap: 10px; width: 100%; align-items: center; }
 
-    /* Snake speed control */
-    .speed-control { width: 100%; max-width: 320px; display: flex; flex-direction: column; gap: 6px; }
+    .code-box {
+      font-size: 2.1rem; font-weight: 900; letter-spacing: 8px; text-align: center;
+      width: 100%; max-width: 280px; padding: 14px 10px; border-radius: 12px;
+      border: 1px dashed var(--border); background: var(--surface2); color: var(--green);
+      caret-color: var(--primary);
+    }
+    .code-box:not([disabled]) { border-style: solid; color: var(--text); }
+    .code-box:focus { outline: none; border-color: var(--primary); }
+    .code-box::placeholder { color: var(--text-muted); letter-spacing: 6px; }
+
+    /* speed + accordion inside How to play */
+    .speed-control { width: 100%; max-width: 300px; display: flex; flex-direction: column; gap: 6px; }
     .speed-label { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
     .speed-label b { color: var(--text); }
     #speedRange { width: 100%; accent-color: var(--primary); height: 26px; cursor: pointer; }
     .speed-ticks { display: flex; justify-content: space-between; font-size: 0.68rem; color: var(--text-muted); }
 
-    /* On a computer (mouse, wide), let the board fill the screen: scale it to the
-       largest size that still fits the viewport height. */
-    @media (min-width: 761px) and (pointer: fine) {
-      .stage, .hud { max-width: min(94vw, max(420px, calc((100vh - 244px) * 1.4))); }
+    .accordion { width: 100%; display: flex; flex-direction: column; gap: 8px; }
+    details {
+      width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px;
+      padding: 0 14px; text-align: left;
     }
+    summary {
+      cursor: pointer; font-weight: 700; font-size: 0.92rem; padding: 12px 0; list-style: none;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::after { content: '+'; color: var(--text-muted); font-size: 1.2rem; }
+    details[open] summary::after { content: '\2212'; }
+    .acc-body { font-size: 0.85rem; color: var(--text-muted); line-height: 1.6; padding: 0 0 14px; }
+    .acc-body b { color: var(--text); }
+    .acc-body .k { display: inline-block; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 1px 7px; font-weight: 700; color: var(--text); margin: 0 1px; }
 
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
@@ -299,30 +206,12 @@
 <body>
   <div class="rotate-notice" id="rotateNotice">
     <div class="rot-emoji">&#128241;</div>
-    <div class="rot-text">Please hold your phone in portrait to play Snake Duel.</div>
+    <div class="rot-text">Please hold your device in portrait to play Snake Duel.</div>
   </div>
 
   <a href="/" class="hub-link">&#8592; My Plays</a>
 
-  <header>
-    <div class="title">Snake Duel</div>
-    <div class="subtitle">Two snakes, one arena. Grow to 6 to win, or shoot your rival to pieces.</div>
-  </header>
-
-  <div class="hud">
-    <div class="player-panel p1">
-      <div class="player-name">Player 1 - Green</div>
-      <div class="pips" id="pips1"></div>
-      <div class="fire-state" id="fire1">WASD + Space</div>
-    </div>
-    <div class="player-panel p2">
-      <div class="player-name">Player 2 - Pink</div>
-      <div class="pips" id="pips2"></div>
-      <div class="fire-state" id="fire2">Arrows + Enter</div>
-    </div>
-  </div>
-
-  <!-- Player 2 touch pad (top, rotated to face the player at the other end) -->
+  <!-- Player 2 pad (top, rotated to face the player at the other end) -->
   <div class="pad p2" id="padTop">
     <div class="dpad">
       <button class="dbtn up"    data-dir="up"    aria-label="Player 2 up">&#9650;</button>
@@ -336,25 +225,77 @@
     <canvas id="board" width="588" height="420" aria-label="Snake Duel board"></canvas>
   </div>
 
-  <!-- Player 1 touch pad (bottom) -->
+  <!-- Player 1 / local-player pad (bottom) -->
   <div class="pad p1" id="padBottom">
     <div class="dpad">
-      <button class="dbtn up"    data-dir="up"    aria-label="Player 1 up">&#9650;</button>
-      <button class="dbtn left"  data-dir="left"  aria-label="Player 1 left">&#9664;</button>
-      <button class="dbtn right" data-dir="right" aria-label="Player 1 right">&#9654;</button>
-      <button class="dbtn down"  data-dir="down"  aria-label="Player 1 down">&#9660;</button>
+      <button class="dbtn up"    data-dir="up"    aria-label="up">&#9650;</button>
+      <button class="dbtn left"  data-dir="left"  aria-label="left">&#9664;</button>
+      <button class="dbtn right" data-dir="right" aria-label="right">&#9654;</button>
+      <button class="dbtn down"  data-dir="down"  aria-label="down">&#9660;</button>
     </div>
   </div>
 
-  <!-- Start overlay -->
-  <div class="overlay" id="startOverlay">
+  <!-- Landing: choose how to play -->
+  <div class="overlay hidden" id="landingOverlay">
     <div class="card">
       <div class="overlay-title">Snake Duel</div>
-      <p class="overlay-text">
-        Each snake starts at 3 cubes. Eat food to grow, reach 6 cubes to win. Shoot the other snake to
-        blow off a cube, a head shot pushes their head back, any other hit closes the gap. Hit a wall,
-        the other snake, or yourself and you lose. Two heads colliding is a tie.
-      </p>
+      <p class="overlay-text">Two snakes, one arena. Grow to 6 to win, or shoot your rival to pieces.</p>
+      <div class="btn-row">
+        <button class="btn" id="btn-go-online">Play online</button>
+        <button class="btn btn-secondary" id="btn-go-local">Play local</button>
+      </div>
+      <a href="/" class="btn btn-secondary">Hub</a>
+    </div>
+  </div>
+
+  <!-- Online setup: invite / join -->
+  <div class="overlay hidden" id="onlineOverlay">
+    <div class="card">
+      <div class="overlay-title">Play online</div>
+      <p class="overlay-text" id="onlineLabel">Invite a friend to your game, or join theirs.</p>
+      <input id="codeBox" class="code-box" inputmode="numeric" pattern="[0-9]*" maxlength="6" disabled placeholder="------">
+      <button class="btn" id="btn-online-go" hidden>Join game</button>
+      <div class="btn-row" id="onlineButtons">
+        <button class="btn" id="btn-invite">Invite a player</button>
+        <button class="btn btn-secondary" id="btn-join">Join a player</button>
+      </div>
+      <p class="overlay-text small" id="onlineMsg"></p>
+      <a href="/" class="btn btn-secondary">Hub</a>
+    </div>
+  </div>
+
+  <!-- Game over -->
+  <div class="overlay hidden" id="resultOverlay">
+    <div class="card">
+      <div class="overlay-title" id="resultTitle">Result</div>
+      <p class="overlay-text" id="resultText"></p>
+      <div class="btn-row">
+        <button class="btn" id="btn-rematch">Play again</button>
+        <button class="btn btn-secondary" id="btn-howto">How to play</button>
+        <a href="/" class="btn btn-secondary">Hub</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- How to play -->
+  <div class="overlay hidden" id="howtoOverlay">
+    <div class="card">
+      <div class="overlay-title">How to play</div>
+
+      <div class="accordion" id="howtoKbd">
+        <details open>
+          <summary>Game rules</summary>
+          <div class="acc-body" id="rulesTextKbd"></div>
+        </details>
+        <details>
+          <summary>Keyboard shortcuts</summary>
+          <div class="acc-body" id="keysText"></div>
+        </details>
+      </div>
+
+      <div id="howtoTouch" class="hidden">
+        <p class="overlay-text" id="rulesTextTouch"></p>
+      </div>
 
       <div class="speed-control">
         <label class="speed-label" for="speedRange">Snake speed: <b id="speedName">Normal</b></label>
@@ -362,70 +303,7 @@
         <div class="speed-ticks"><span>Relaxed</span><span>Turbo</span></div>
       </div>
 
-      <button class="btn btn-secondary fs-btn" id="btn-fullscreen" hidden>&#9974; Fullscreen</button>
-      <p class="overlay-text small fs-hint" id="fsHint" hidden>On iPhone: tap Share, then "Add to Home Screen" to play fullscreen.</p>
-
-      <div class="mode-tabs">
-        <button class="mode-tab active" data-mode="local" id="tab-local">Same device</button>
-        <button class="mode-tab" data-mode="online" id="tab-online">Online</button>
-      </div>
-
-      <!-- Local panel -->
-      <div class="mode-panel" id="localPanel">
-        <div class="controls">
-          <div class="ctrl-card p1">
-            <div class="ctrl-head">Player 1 - Green</div>
-            <div class="ctrl-row">Keyboard: <b>W A S D</b> to move, <b>Space</b> to fire</div>
-            <div class="ctrl-row">Phone: <b>bottom</b> pad</div>
-          </div>
-          <div class="ctrl-card p2">
-            <div class="ctrl-head">Player 2 - Pink</div>
-            <div class="ctrl-row">Keyboard: <b>Arrow keys</b> to move, <b>Enter</b> to fire</div>
-            <div class="ctrl-row">Phone: <b>top</b> pad</div>
-          </div>
-        </div>
-        <p class="overlay-text small">On a phone, two players hold opposite ends: Green uses the bottom pad, Pink the top pad (it faces you). Tap a direction to turn, and tap the way you are already heading to fire.</p>
-        <button class="btn" id="btn-start-local">Start duel</button>
-      </div>
-
-      <!-- Online panel -->
-      <div class="mode-panel hidden" id="onlinePanel">
-        <div id="onlineChoose" class="mode-panel">
-          <p class="overlay-text">Play with a friend on another device. Free, peer to peer, no account. You will be Green, your friend Pink.</p>
-          <div class="btn-row">
-            <button class="btn" id="btn-create">Create game</button>
-            <button class="btn btn-secondary" id="btn-joinmode">Join game</button>
-          </div>
-        </div>
-
-        <div id="onlineHost" class="mode-panel hidden">
-          <p class="overlay-text">Share this room code with your friend:</p>
-          <div class="room-code" id="roomCode">····</div>
-          <p class="overlay-text" id="hostStatus">Starting room...</p>
-          <button class="btn" id="btn-start-online" disabled>Start duel</button>
-        </div>
-
-        <div id="onlineJoin" class="mode-panel hidden">
-          <p class="overlay-text">Enter the room code from your friend:</p>
-          <input id="joinCode" class="code-input" maxlength="6" placeholder="CODE" autocomplete="off" autocapitalize="characters" spellcheck="false">
-          <p class="overlay-text" id="joinStatus"></p>
-          <button class="btn" id="btn-connect">Connect</button>
-        </div>
-
-        <p class="overlay-text small" id="onlineError"></p>
-      </div>
-    </div>
-  </div>
-
-  <!-- Result overlay -->
-  <div class="overlay hidden" id="resultOverlay">
-    <div class="card">
-      <div class="overlay-title" id="resultTitle">Result</div>
-      <p class="overlay-text" id="resultText"></p>
-      <div class="btn-row">
-        <button class="btn" id="btn-rematch">Play again</button>
-        <a href="/" class="btn btn-secondary">Hub</a>
-      </div>
+      <button class="btn" id="btn-howto-back">Back</button>
     </div>
   </div>
 
@@ -435,14 +313,16 @@
   (function () {
     'use strict';
     var Engine = window.SnakeDuelEngine;
+    var body = document.body;
     var canvas = document.getElementById('board');
     var ctx = canvas.getContext('2d');
+    var stage = document.querySelector('.stage');
 
-    var COLS = 21, ROWS = 15;
-    var CELL = 28;
+    var COLS = 21, ROWS = 15, CELL = 28;
+    var COLORS = { green: '#43d98c', greenHead: '#7ff0b6', pink: '#ff6584', pinkHead: '#ff9bb1', food: '#ffd166', shot: '#ffffff' };
+    var INV = { up: 'down', down: 'up', left: 'right', right: 'left' };
+    var DIRS = Engine.DIRS;
 
-    // Snake speed presets (ms per snake step; lower is faster). Projectiles always
-    // move faster than the snakes. The chosen level is applied when a round starts.
     var SPEEDS = [
       null,
       { name: 'Relaxed', snake: 175, proj: 58 },
@@ -455,68 +335,77 @@
     var SNAKE_MS = SPEEDS[speedLevel].snake;
     var PROJ_MS = SPEEDS[speedLevel].proj;
 
-    // Size the canvas backing store to its displayed size (times devicePixelRatio)
-    // so the board stays crisp when it fills a large screen.
-    function fitCanvas() {
-      var dpr = window.devicePixelRatio || 1;
-      var cssW = canvas.clientWidth || COLS * 28;
-      var w = Math.max(280, Math.round(cssW * dpr));
-      canvas.width = w;
-      canvas.height = Math.round(w * ROWS / COLS);
-      CELL = canvas.width / COLS;
-      if (!running) draw(remoteState || null);
-    }
-    window.addEventListener('resize', fitCanvas);
-    window.addEventListener('orientationchange', fitCanvas);
-
-    var COLORS = {
-      green: '#43d98c', greenHead: '#7ff0b6',
-      pink: '#ff6584', pinkHead: '#ff9bb1',
-      food: '#ffd166', shot: '#ffffff'
-    };
-    var INV = { up: 'down', down: 'up', left: 'right', right: 'left' };
-    var DIRS = Engine.DIRS;
-
     // mode: 'local' (two players, one device) | 'host' (online, you are P1) | 'client' (online, you are P2)
     var mode = 'local';
     var localPlayer = 1;
-    var game = null;          // engine instance (local + host)
-    var remoteState = null;   // latest snapshot (client)
+    var game = null, remoteState = null;
     var running = false, paused = false;
     var lastSnakeStep = 0, lastProjStep = 0, rafId = null;
     var net = { peer: null, conn: null };
 
-    var startOverlay = document.getElementById('startOverlay');
-    var resultOverlay = document.getElementById('resultOverlay');
-    var resultTitle = document.getElementById('resultTitle');
-    var resultText = document.getElementById('resultText');
-    var fire1El = document.getElementById('fire1');
-    var fire2El = document.getElementById('fire2');
+    // device
+    var isTouch = window.matchMedia('(pointer: coarse)').matches || ('ontouchstart' in window);
+    function isPhone() { return Math.min(window.innerWidth, window.innerHeight) < 600; }
+
     var padTop = document.getElementById('padTop');
     var padBottom = document.getElementById('padBottom');
 
-    function buildPips(el) { el.innerHTML = ''; for (var i = 0; i < 6; i++) { var p = document.createElement('div'); p.className = 'pip'; el.appendChild(p); } }
-    buildPips(document.getElementById('pips1'));
-    buildPips(document.getElementById('pips2'));
+    // ---- sizing ----
+    function appHeight() { return (window.visualViewport && window.visualViewport.height) || window.innerHeight; }
+    function fitCanvas() {
+      var dpr = window.devicePixelRatio || 1;
+      var cssW = canvas.clientWidth || COLS * 28;
+      var w = Math.max(220, Math.round(cssW * dpr));
+      canvas.width = w; canvas.height = Math.round(w * ROWS / COLS);
+      CELL = canvas.width / COLS;
+    }
+    function fitBoard() {
+      var appH = appHeight(), appW = window.innerWidth;
+      var twopad = body.classList.contains('twopad');
+      var onepad = body.classList.contains('onepad');
+      var cs = getComputedStyle(body);
+      var safe = (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0);
+      var padH = (twopad || onepad) ? (padBottom.getBoundingClientRect().height || 188) : 0;
+      var reserve = twopad ? padH * 2 + safe + 8 : onepad ? padH + safe + 8 : safe + 12;
+      var availH = Math.max(160, appH - reserve);
+      var availW = window.innerWidth * (body.classList.contains('kbd') ? 0.985 : 0.96);
+      var boardW = Math.max(200, Math.min(availW, availH * (COLS / ROWS)));
+      stage.style.maxWidth = Math.round(boardW) + 'px';
+      stage.style.width = Math.round(boardW) + 'px';
+      fitCanvas();
+      if (!running) draw(remoteState || null);
+    }
+    function setAppHeight() {
+      document.documentElement.style.setProperty('--app-height', Math.round(appHeight()) + 'px');
+      fitBoard();
+    }
+    window.addEventListener('resize', setAppHeight);
+    window.addEventListener('orientationchange', function () { setTimeout(setAppHeight, 250); });
+    if (window.visualViewport) window.visualViewport.addEventListener('resize', setAppHeight);
 
-    // ---- input routing ----
-    function inputDir(player, dir) {
-      if (mode === 'client') netSend({ t: 'dir', dir: dir });
-      else if (game) game.setDir(player, dir);
+    function setupLayout() {
+      body.classList.remove('kbd', 'twopad', 'onepad', 'me-green', 'me-pink');
+      padTop.classList.remove('show'); padBottom.classList.remove('show');
+      if (!isTouch) {
+        body.classList.add('kbd');
+      } else if (mode === 'local') {
+        body.classList.add('twopad');
+        padTop.classList.add('show'); padBottom.classList.add('show');
+      } else {
+        body.classList.add('onepad');
+        padBottom.classList.add('show');
+        body.classList.add(localPlayer === 2 ? 'me-pink' : 'me-green');
+      }
+      fitBoard();
     }
-    function inputFire(player) {
-      if (mode === 'client') netSend({ t: 'fire' });
-      else if (game) game.fire(player);
-    }
+
+    // ---- input ----
+    function inputDir(player, dir) { if (mode === 'client') netSend({ t: 'dir', dir: dir }); else if (game) game.setDir(player, dir); }
+    function inputFire(player) { if (mode === 'client') netSend({ t: 'fire' }); else if (game) game.fire(player); }
     function padPlayer(pos) { return mode === 'local' ? (pos === 'bottom' ? 1 : 2) : localPlayer; }
     function padInvert(pos) { return mode === 'local' && pos === 'top'; }
 
-    function dirName(v) {
-      if (!v) return null;
-      for (var k in DIRS) { if (DIRS[k].x === v.x && DIRS[k].y === v.y) return k; }
-      return null;
-    }
-    // The board direction the given player's snake is currently moving (head minus neck).
+    function dirName(v) { if (!v) return null; for (var k in DIRS) { if (DIRS[k].x === v.x && DIRS[k].y === v.y) return k; } return null; }
     function currentDirName(player) {
       if (mode === 'client') {
         var rs = remoteState && remoteState.snakes && remoteState.snakes[player - 1];
@@ -526,6 +415,7 @@
       if (game && game.snakes[player - 1]) return dirName(game.snakes[player - 1].dir);
       return null;
     }
+    function resolvedDir(pos, base) { return padInvert(pos) ? INV[base] : base; }
 
     function bindPad(padEl, pos) {
       padEl.querySelectorAll('[data-dir]').forEach(function (btn) {
@@ -533,32 +423,29 @@
           e.preventDefault();
           if (!running || paused) return;
           var player = padPlayer(pos);
-          var base = btn.getAttribute('data-dir');
-          var dir = padInvert(pos) ? INV[base] : base;
-          // Tapping the way the snake is already heading fires; any other tap turns.
-          if (currentDirName(player) === dir) inputFire(player);
-          else inputDir(player, dir);
+          var dir = resolvedDir(pos, btn.getAttribute('data-dir'));
+          if (currentDirName(player) === dir) inputFire(player); else inputDir(player, dir);
         });
       });
     }
-    bindPad(padTop, 'top');
-    bindPad(padBottom, 'bottom');
+    bindPad(padTop, 'top'); bindPad(padBottom, 'bottom');
 
-    function setupPads() {
-      padBottom.classList.add('show');
-      if (mode === 'local') padTop.classList.add('show');
-      else padTop.classList.remove('show');
+    function updateBadges() {
+      [['top', padTop], ['bottom', padBottom]].forEach(function (pair) {
+        var pos = pair[0], pad = pair[1];
+        if (!pad.classList.contains('show')) return;
+        var cur = currentDirName(padPlayer(pos));
+        pad.querySelectorAll('[data-dir]').forEach(function (btn) {
+          btn.classList.toggle('fire', resolvedDir(pos, btn.getAttribute('data-dir')) === cur);
+        });
+      });
     }
 
-    // ---- keyboard ----
-    var LOCAL_KEYMAP = {
-      KeyW: [1, 'up'], KeyS: [1, 'down'], KeyA: [1, 'left'], KeyD: [1, 'right'],
-      ArrowUp: [2, 'up'], ArrowDown: [2, 'down'], ArrowLeft: [2, 'left'], ArrowRight: [2, 'right']
-    };
+    // keyboard
+    var LOCAL_KEYMAP = { KeyW: [1, 'up'], KeyS: [1, 'down'], KeyA: [1, 'left'], KeyD: [1, 'right'], ArrowUp: [2, 'up'], ArrowDown: [2, 'down'], ArrowLeft: [2, 'left'], ArrowRight: [2, 'right'] };
     var LOCAL_FIRE = { Space: 1, Enter: 2 };
     var UNI_DIR = { KeyW: 'up', KeyS: 'down', KeyA: 'left', KeyD: 'right', ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' };
     var PREVENT = { Space: 1, Enter: 1, ArrowUp: 1, ArrowDown: 1, ArrowLeft: 1, ArrowRight: 1 };
-
     window.addEventListener('keydown', function (e) {
       if (PREVENT[e.code] && document.activeElement && document.activeElement.tagName !== 'INPUT') e.preventDefault();
       if (e.code === 'KeyP' && (mode === 'local' || mode === 'host')) { if (running) paused = !paused; return; }
@@ -574,53 +461,25 @@
 
     // ---- rendering ----
     function draw(state) {
-      ctx.fillStyle = '#0b0d14';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.strokeStyle = '#171a26';
-      ctx.lineWidth = 1;
+      ctx.fillStyle = '#0b0d14'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = '#171a26'; ctx.lineWidth = 1;
       for (var x = 0; x <= COLS; x++) { ctx.beginPath(); ctx.moveTo(x * CELL, 0); ctx.lineTo(x * CELL, canvas.height); ctx.stroke(); }
       for (var y = 0; y <= ROWS; y++) { ctx.beginPath(); ctx.moveTo(0, y * CELL); ctx.lineTo(canvas.width, y * CELL); ctx.stroke(); }
       if (!state) return;
       (state.food || []).forEach(function (f) { ctx.fillStyle = COLORS.food; roundCell(f.x, f.y, 6); });
-      if (state.snakes) {
-        drawSnake(state.snakes[0], COLORS.green, COLORS.greenHead);
-        drawSnake(state.snakes[1], COLORS.pink, COLORS.pinkHead);
-      }
+      if (state.snakes) { drawSnake(state.snakes[0], COLORS.green, COLORS.greenHead); drawSnake(state.snakes[1], COLORS.pink, COLORS.pinkHead); }
       (state.projectiles || []).forEach(function (p) {
-        ctx.fillStyle = COLORS.shot;
-        ctx.beginPath();
-        ctx.arc(p.pos.x * CELL + CELL / 2, p.pos.y * CELL + CELL / 2, CELL / 5, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.fillStyle = COLORS.shot; ctx.beginPath();
+        ctx.arc(p.pos.x * CELL + CELL / 2, p.pos.y * CELL + CELL / 2, CELL / 5, 0, Math.PI * 2); ctx.fill();
       });
     }
     function roundCell(cx, cy, r) {
       var px = cx * CELL + 2, py = cy * CELL + 2, s = CELL - 4;
-      ctx.beginPath();
-      if (ctx.roundRect) ctx.roundRect(px, py, s, s, r); else ctx.rect(px, py, s, s);
-      ctx.fill();
+      ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(px, py, s, s, r); else ctx.rect(px, py, s, s); ctx.fill();
     }
     function drawSnake(snake, bodyColor, headColor) {
       if (!snake || !snake.cells.length) return;
       snake.cells.forEach(function (c, i) { ctx.fillStyle = i === 0 ? headColor : bodyColor; roundCell(c.x, c.y, i === 0 ? 8 : 5); });
-    }
-
-    function updateHud(state) {
-      if (!state || !state.snakes) return;
-      setPips(document.getElementById('pips1'), state.snakes[0] ? state.snakes[0].cells.length : 0);
-      setPips(document.getElementById('pips2'), state.snakes[1] ? state.snakes[1].cells.length : 0);
-      if (game && (mode === 'local' || mode === 'host')) {
-        var t = Date.now();
-        setFire(fire1El, game.snakes[0], 'Space', t);
-        if (mode === 'local') setFire(fire2El, game.snakes[1], 'Enter', t);
-        else fire2El.textContent = 'Pink (your friend)';
-      }
-    }
-    function setPips(el, len) { var c = el.children; for (var i = 0; i < c.length; i++) c[i].className = 'pip' + (i < len ? ' on' : ''); }
-    function setFire(el, snake, key, t) {
-      if (!snake) return;
-      var ready = t >= snake.cooldownUntil;
-      el.textContent = ready ? ('Fire ready (' + key + ')') : 'Reloading...';
-      el.className = 'fire-state' + (ready ? ' ready' : '');
     }
 
     // ---- loops ----
@@ -632,164 +491,163 @@
       var changed = false;
       if (ts - lastProjStep >= PROJ_MS) { game.tickProjectiles(); lastProjStep = ts; changed = true; }
       if (ts - lastSnakeStep >= SNAKE_MS) { game.tickSnakes(); lastSnakeStep = ts; changed = true; }
-      draw(game); updateHud(game);
+      draw(game); updateBadges();
       if (mode === 'host' && changed) netSend({ t: 'state', s: game.snapshot() });
-      if (game.status !== 'playing') {
-        if (mode === 'host') netSend({ t: 'state', s: game.snapshot() });
-        endGame(game.status);
-      }
+      if (game.status !== 'playing') { if (mode === 'host') netSend({ t: 'state', s: game.snapshot() }); endGame(game.status); }
     }
     function clientStep() {
       if (!running) return;
       rafId = requestAnimationFrame(clientStep);
-      draw(remoteState); updateHud(remoteState);
+      draw(remoteState); updateBadges();
       if (remoteState && remoteState.status && remoteState.status !== 'playing') endGame(remoteState.status);
     }
 
+    function applySpeed() { var s = SPEEDS[speedLevel] || SPEEDS[2]; SNAKE_MS = s.snake; PROJ_MS = s.proj; }
+
     function startEngineGame(m) {
       applySpeed();
-      mode = m;
-      localPlayer = (m === 'client') ? 2 : 1;
+      mode = m; localPlayer = (m === 'client') ? 2 : 1;
       game = Engine.createGame({ config: { cols: COLS, rows: ROWS } });
-      remoteState = null;
-      running = true; paused = false; lastSnakeStep = 0; lastProjStep = 0;
-      setupPads(); hideOverlays(); updateHud(game);
+      remoteState = null; running = true; paused = false; lastSnakeStep = 0; lastProjStep = 0;
+      body.classList.remove('menu'); hideOverlays(); setupLayout();
       if (rafId) cancelAnimationFrame(rafId);
       rafId = requestAnimationFrame(engineStep);
       if (m === 'host') netSend({ t: 'state', s: game.snapshot() });
     }
     function startLocal() { startEngineGame('local'); }
     function startHost() { startEngineGame('host'); }
-
     function beginClient() {
-      mode = 'client'; localPlayer = 2;
-      running = true; paused = false;
-      setupPads(); hideOverlays();
+      mode = 'client'; localPlayer = 2; running = true; paused = false;
+      body.classList.remove('menu'); hideOverlays(); setupLayout();
       if (rafId) cancelAnimationFrame(rafId);
       rafId = requestAnimationFrame(clientStep);
     }
 
     function endGame(status) {
       if (!running) return;
-      running = false;
-      if (rafId) cancelAnimationFrame(rafId);
-      var msg = { p1: 'Player 1 - Green wins!', p2: 'Player 2 - Pink wins!', tie: "It's a tie!" };
+      running = false; if (rafId) cancelAnimationFrame(rafId);
+      var msg = { p1: 'Green wins!', p2: 'Pink wins!', tie: "It's a tie!" };
       resultTitle.textContent = msg[status] || 'Result';
-      resultTitle.style.color = status === 'p1' ? COLORS.green : status === 'p2' ? COLORS.pink : 'var(--text)';
       if (status === 'tie') resultText.textContent = 'Both players went out at the same moment. Line up a rematch.';
-      else if (status === 'p1') resultText.textContent = 'Green reached the win or left Pink with nothing. Rematch?';
-      else resultText.textContent = 'Pink reached the win or left Green with nothing. Rematch?';
-      resultOverlay.classList.remove('hidden');
+      else if (status === 'p1') resultText.textContent = 'Green reached the win or left Pink with nothing.';
+      else resultText.textContent = 'Pink reached the win or left Green with nothing.';
+      showOverlay('resultOverlay');
     }
 
-    function hideOverlays() { startOverlay.classList.add('hidden'); resultOverlay.classList.add('hidden'); }
+    // ---- overlays ----
+    var landingOverlay = document.getElementById('landingOverlay');
+    var onlineOverlay = document.getElementById('onlineOverlay');
+    var resultOverlay = document.getElementById('resultOverlay');
+    var howtoOverlay = document.getElementById('howtoOverlay');
+    var resultTitle = document.getElementById('resultTitle');
+    var resultText = document.getElementById('resultText');
+
+    function hideOverlays() { [landingOverlay, onlineOverlay, resultOverlay, howtoOverlay].forEach(function (o) { o.classList.add('hidden'); }); }
+    function showOverlay(id) {
+      hideOverlays();
+      document.getElementById(id).classList.remove('hidden');
+      body.classList.add('menu');
+    }
+
+    function showLanding() {
+      document.getElementById('btn-go-local').style.display = isPhone() ? 'none' : '';
+      showOverlay('landingOverlay');
+    }
+    function showOnline() {
+      resetOnlineUi();
+      showOverlay('onlineOverlay');
+    }
+
+    // ---- How to play ----
+    var RULES = 'Each snake starts at 3 cubes. Eat food to grow, reach 6 cubes to win. Shoot the other snake to blow off a cube, a head shot pushes their head back, any other hit closes the gap. Hit a wall, the other snake, or yourself and you lose. Two heads colliding is a tie.';
+    document.getElementById('rulesTextKbd').textContent = RULES;
+    document.getElementById('rulesTextTouch').textContent = RULES;
+    function showHowto() {
+      var keyboard = !isTouch;
+      document.getElementById('howtoKbd').classList.toggle('hidden', !keyboard);
+      document.getElementById('howtoTouch').classList.toggle('hidden', keyboard);
+      if (keyboard) {
+        document.getElementById('keysText').innerHTML = (mode === 'local')
+          ? 'Player 1 - Green: move <span class="k">W</span> <span class="k">A</span> <span class="k">S</span> <span class="k">D</span>, fire <span class="k">Space</span>.<br>Player 2 - Pink: move with the <span class="k">Arrow keys</span>, fire <span class="k">Enter</span>.'
+          : 'Move with <span class="k">W</span> <span class="k">A</span> <span class="k">S</span> <span class="k">D</span> or the <span class="k">Arrow keys</span>. Fire with <span class="k">Space</span> or <span class="k">Enter</span>.';
+      }
+      showOverlay('howtoOverlay');
+    }
 
     // ---- networking (PeerJS, free peer to peer) ----
     var PREFIX = 'myplays-snakeduel-';
-    var roomCodeEl = document.getElementById('roomCode');
-    var hostStatus = document.getElementById('hostStatus');
-    var joinStatus = document.getElementById('joinStatus');
-    var joinCodeEl = document.getElementById('joinCode');
-    var onlineErrorEl = document.getElementById('onlineError');
-    var startOnlineBtn = document.getElementById('btn-start-online');
+    var codeBox = document.getElementById('codeBox');
+    var onlineLabel = document.getElementById('onlineLabel');
+    var onlineMsg = document.getElementById('onlineMsg');
+    var onlineButtons = document.getElementById('onlineButtons');
+    var onlineGoBtn = document.getElementById('btn-online-go');
 
     function netSend(obj) { if (net.conn && net.conn.open) { try { net.conn.send(obj); } catch (e) {} } }
-    function onlineError(msg) { onlineErrorEl.textContent = msg || ''; }
-    function genCode() { var a = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789', s = ''; for (var i = 0; i < 4; i++) s += a[Math.floor(Math.random() * a.length)]; return s; }
+    function genCode() { var s = ''; for (var i = 0; i < 6; i++) s += Math.floor(Math.random() * 10); return s; }
 
-    function createHost() {
-      onlineError('');
-      if (!window.Peer) { onlineError('Online is unavailable right now. You can still play on one device.'); return; }
-      showOnlineSub('host');
-      hostStatus.textContent = 'Starting room...';
+    function resetOnlineUi() {
+      closePeer();
+      onlineLabel.textContent = 'Invite a friend to your game, or join theirs.';
+      codeBox.value = ''; codeBox.setAttribute('disabled', ''); codeBox.placeholder = '------';
+      onlineButtons.classList.remove('hidden'); onlineGoBtn.hidden = true; onlineMsg.textContent = '';
+    }
+    function closePeer() { try { if (net.peer) net.peer.destroy(); } catch (e) {} net.peer = null; net.conn = null; }
+
+    function inviteHost() {
+      if (!window.Peer) { onlineMsg.textContent = 'Online is unavailable right now. Please try again later.'; return; }
+      onlineButtons.classList.add('hidden'); onlineGoBtn.hidden = true;
+      onlineLabel.textContent = 'Tell your friend to join with this code.';
+      codeBox.setAttribute('disabled', ''); codeBox.value = '......';
+      onlineMsg.textContent = 'Setting up your room...';
       var attempts = 0;
       (function tryHost() {
         var code = genCode();
-        var peer = new Peer(PREFIX + code);
-        net.peer = peer;
-        peer.on('open', function () { roomCodeEl.textContent = code; hostStatus.textContent = 'Waiting for your friend to join...'; });
+        var peer = new Peer(PREFIX + code); net.peer = peer;
+        peer.on('open', function () { codeBox.value = code; onlineMsg.textContent = 'Waiting for your friend to join...'; });
         peer.on('connection', function (conn) {
           net.conn = conn;
-          conn.on('open', function () { hostStatus.textContent = 'Friend joined. Press Start when ready.'; startOnlineBtn.disabled = false; });
           conn.on('data', handleHostData);
-          conn.on('close', function () { if (running && mode === 'host') { endGame('p1'); } });
+          conn.on('open', function () { onlineMsg.textContent = 'Friend joined. Starting...'; startHost(); });
+          conn.on('close', function () { if (running && mode === 'host') endGame('p1'); });
         });
         peer.on('error', function (err) {
-          if (err && err.type === 'unavailable-id' && attempts < 5) { attempts++; try { peer.destroy(); } catch (e) {} tryHost(); return; }
-          onlineError('Could not start the room (' + (err && err.type) + '). Try again, or play on one device.');
+          if (err && err.type === 'unavailable-id' && attempts < 6) { attempts++; try { peer.destroy(); } catch (e) {} tryHost(); return; }
+          onlineMsg.textContent = 'Could not start the room (' + (err && err.type) + '). Tap Invite a player to retry.';
+          onlineButtons.classList.remove('hidden');
         });
       })();
     }
 
+    function joinMode() {
+      onlineButtons.classList.add('hidden');
+      onlineLabel.textContent = 'Enter the code you got from your friend.';
+      codeBox.removeAttribute('disabled'); codeBox.value = ''; codeBox.placeholder = '000000';
+      onlineGoBtn.hidden = false; onlineMsg.textContent = '';
+      setTimeout(function () { codeBox.focus(); }, 50);
+    }
+
     function connectClient() {
-      onlineError('');
-      var code = (joinCodeEl.value || '').trim().toUpperCase();
-      if (code.length < 4) { joinStatus.textContent = 'Enter the 4 letter code.'; return; }
-      if (!window.Peer) { onlineError('Online is unavailable right now.'); return; }
-      joinStatus.textContent = 'Connecting...';
-      var peer = new Peer();
-      net.peer = peer;
+      if (!window.Peer) { onlineMsg.textContent = 'Online is unavailable right now.'; return; }
+      var code = (codeBox.value || '').replace(/\D/g, '');
+      if (code.length < 6) { onlineMsg.textContent = 'Enter the 6 digit code.'; return; }
+      onlineMsg.textContent = 'Connecting...';
+      var peer = new Peer(); net.peer = peer;
       peer.on('open', function () {
-        var conn = peer.connect(PREFIX + code, { reliable: true });
-        net.conn = conn;
-        conn.on('open', function () { joinStatus.textContent = 'Connected. Waiting for the host to start...'; });
+        var conn = peer.connect(PREFIX + code, { reliable: true }); net.conn = conn;
+        conn.on('open', function () { onlineMsg.textContent = 'Connected. Waiting for the game to start...'; });
         conn.on('data', handleClientData);
         conn.on('close', function () { if (running && mode === 'client') endGame('p2'); });
-        setTimeout(function () { if (!conn.open) joinStatus.textContent = 'No response yet. Check the code and try again.'; }, 9000);
+        setTimeout(function () { if (!conn.open) onlineMsg.textContent = 'No response yet. Check the code and try again.'; }, 9000);
       });
-      peer.on('error', function (err) { joinStatus.textContent = 'Connection problem (' + (err && err.type) + '). Check the code.'; });
+      peer.on('error', function (err) { onlineMsg.textContent = 'Connection problem (' + (err && err.type) + '). Check the code.'; });
     }
 
-    function handleHostData(d) {
-      if (!d) return;
-      if (d.t === 'dir') { if (game) game.setDir(2, d.dir); }
-      else if (d.t === 'fire') { if (game) game.fire(2); }
-      else if (d.t === 'rematch') { startHost(); }
-    }
-    function handleClientData(d) {
-      if (!d) return;
-      if (d.t === 'state') { remoteState = d.s; if (!running) beginClient(); }
-    }
+    function handleHostData(d) { if (!d) return; if (d.t === 'dir') { if (game) game.setDir(2, d.dir); } else if (d.t === 'fire') { if (game) game.fire(2); } else if (d.t === 'rematch') startHost(); }
+    function handleClientData(d) { if (!d) return; if (d.t === 'state') { remoteState = d.s; if (!running) beginClient(); } }
 
-    // ---- UI wiring ----
-    var localPanel = document.getElementById('localPanel');
-    var onlinePanel = document.getElementById('onlinePanel');
-    var onlineChoose = document.getElementById('onlineChoose');
-    var onlineHost = document.getElementById('onlineHost');
-    var onlineJoin = document.getElementById('onlineJoin');
-
-    function showOnlineSub(which) {
-      onlineChoose.classList.toggle('hidden', which !== 'choose');
-      onlineHost.classList.toggle('hidden', which !== 'host');
-      onlineJoin.classList.toggle('hidden', which !== 'join');
-    }
-
-    document.getElementById('tab-local').addEventListener('click', function () {
-      this.classList.add('active'); document.getElementById('tab-online').classList.remove('active');
-      localPanel.classList.remove('hidden'); onlinePanel.classList.add('hidden');
-    });
-    document.getElementById('tab-online').addEventListener('click', function () {
-      this.classList.add('active'); document.getElementById('tab-local').classList.remove('active');
-      onlinePanel.classList.remove('hidden'); localPanel.classList.add('hidden');
-      showOnlineSub('choose'); onlineError('');
-    });
-
-    document.getElementById('btn-start-local').addEventListener('click', startLocal);
-    document.getElementById('btn-create').addEventListener('click', createHost);
-    document.getElementById('btn-joinmode').addEventListener('click', function () { showOnlineSub('join'); joinStatus.textContent = ''; joinCodeEl.focus(); });
-    document.getElementById('btn-connect').addEventListener('click', connectClient);
-    startOnlineBtn.addEventListener('click', startHost);
-
-    document.getElementById('btn-rematch').addEventListener('click', function () {
-      if (mode === 'client') { netSend({ t: 'rematch' }); resultText.textContent = 'Asking the host for a rematch...'; }
-      else if (mode === 'host') { startHost(); }
-      else { startLocal(); }
-    });
-
-    // Speed control wiring (applies to local and to the online host).
+    // ---- speed ----
     var speedRange = document.getElementById('speedRange');
     var speedName = document.getElementById('speedName');
-    function applySpeed() { var s = SPEEDS[speedLevel] || SPEEDS[2]; SNAKE_MS = s.snake; PROJ_MS = s.proj; }
     function updateSpeedLabel() {
       speedLevel = parseInt(speedRange.value, 10) || 2;
       speedName.textContent = (SPEEDS[speedLevel] || SPEEDS[2]).name;
@@ -799,52 +657,58 @@
     speedRange.addEventListener('input', updateSpeedLabel);
     updateSpeedLabel();
 
-    // Drive layout height from the real visible viewport (iOS Safari toolbars make
-    // 100vh / 100dvh unreliable), so the bottom controls always fit on screen.
-    function setAppHeight() {
-      var h = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
-      document.documentElement.style.setProperty('--app-height', Math.round(h) + 'px');
-      fitCanvas();
-    }
-    window.addEventListener('resize', setAppHeight);
-    window.addEventListener('orientationchange', function () { setTimeout(setAppHeight, 250); });
-    if (window.visualViewport) window.visualViewport.addEventListener('resize', setAppHeight);
-
-    // Fullscreen: a button where the API exists (Android, desktop). iPhone Safari
-    // has no fullscreen API, so show the Add to Home Screen tip instead.
-    (function () {
-      var fsBtn = document.getElementById('btn-fullscreen');
-      var fsHint = document.getElementById('fsHint');
+    // ---- fullscreen on first interaction (where supported) ----
+    var fsTried = false;
+    function tryFullscreen() {
+      if (fsTried) return; fsTried = true;
       var docEl = document.documentElement;
       var standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-      if (standalone) return; // already running fullscreen as an installed app
-      if (document.fullscreenEnabled || docEl.webkitRequestFullscreen) {
-        fsBtn.hidden = false;
-        fsBtn.addEventListener('click', function () {
-          var req = docEl.requestFullscreen || docEl.webkitRequestFullscreen;
-          if (req) { try { req.call(docEl); } catch (e) {} }
-        });
-      } else if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
-        fsHint.hidden = false;
-      }
-    })();
+      if (standalone) return;
+      var req = docEl.requestFullscreen || docEl.webkitRequestFullscreen;
+      if (req) { try { req.call(docEl); } catch (e) {} }
+    }
+    window.addEventListener('pointerdown', tryFullscreen, { once: true });
+    window.addEventListener('keydown', tryFullscreen, { once: true });
 
-    // Keep phones portrait: try to lock orientation, and pause while held landscape
-    // (the rotate notice covers the screen until the phone is back in portrait).
+    // ---- portrait lock ----
     try { if (screen.orientation && screen.orientation.lock) screen.orientation.lock('portrait').catch(function () {}); } catch (e) {}
-    var landscapeMQ = window.matchMedia('(orientation: landscape) and (max-height: 520px) and (pointer: coarse)');
+    var landscapeMQ = window.matchMedia('(orientation: landscape) and (pointer: coarse)');
     var autoPaused = false;
     function checkOrientation() {
-      if (landscapeMQ.matches) {
-        if (running && !paused && (mode === 'local' || mode === 'host')) { paused = true; autoPaused = true; }
-      } else if (autoPaused) { paused = false; autoPaused = false; }
+      if (landscapeMQ.matches) { if (running && !paused && (mode === 'local' || mode === 'host')) { paused = true; autoPaused = true; } }
+      else if (autoPaused) { paused = false; autoPaused = false; }
     }
     if (landscapeMQ.addEventListener) landscapeMQ.addEventListener('change', checkOrientation);
     else if (landscapeMQ.addListener) landscapeMQ.addListener(checkOrientation);
 
-    setAppHeight();
-    fitCanvas();
-    draw(null);
+    // ---- wiring ----
+    document.getElementById('btn-go-online').addEventListener('click', showOnline);
+    document.getElementById('btn-go-local').addEventListener('click', startLocal);
+    document.getElementById('btn-invite').addEventListener('click', inviteHost);
+    document.getElementById('btn-join').addEventListener('click', joinMode);
+    document.getElementById('btn-online-go').addEventListener('click', connectClient);
+    codeBox.addEventListener('input', function () { codeBox.value = codeBox.value.replace(/\D/g, '').slice(0, 6); });
+    codeBox.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !codeBox.disabled) connectClient(); });
+
+    document.getElementById('btn-rematch').addEventListener('click', function () {
+      if (mode === 'client') { netSend({ t: 'rematch' }); resultText.textContent = 'Asking the host for a rematch...'; }
+      else if (mode === 'host') startHost();
+      else startLocal();
+    });
+    document.getElementById('btn-howto').addEventListener('click', showHowto);
+    document.getElementById('btn-howto-back').addEventListener('click', function () { showOverlay('resultOverlay'); });
+
+    // ---- routing ----
+    function start() {
+      setAppHeight();
+      var params = new URLSearchParams(location.search);
+      var m = params.get('mode');
+      if (m === 'local' && !isPhone()) startLocal();
+      else if (m === 'online') showOnline();
+      else if (m === 'local' && isPhone()) showOnline();
+      else showLanding();
+    }
+    start();
   })();
   </script>
 </body>
