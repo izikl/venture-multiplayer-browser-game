@@ -36,7 +36,7 @@
       startLen: 3,
       winLen: 6,
       foodCount: 2,
-      fireCooldownMs: 700
+      fireCooldownMs: 160
     };
   }
 
