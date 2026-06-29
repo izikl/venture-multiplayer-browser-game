@@ -34,8 +34,8 @@
     "blurb": "Two snakes duel head to head. Grow to 8 to win, or shoot your rival to pieces.",
     "accent": "#ff7a45",
     "modes": [
-      "online",
       "ai",
+      "online",
       "local"
     ]
   }

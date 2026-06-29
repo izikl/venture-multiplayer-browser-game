@@ -258,7 +258,7 @@
         <div class="card-blurb">${g.blurb}</div>`;
       if (Array.isArray(g.modes) && g.modes.length) {
         const small = Math.min(window.innerWidth, window.innerHeight) < 600;
-        const MODE_LABELS = { online: 'Play online', ai: 'Play vs computer', local: 'Play local' };
+        const MODE_LABELS = { online: 'Play online', ai: 'Play vs computer', local: '2 players (same device)' };
         let modes = g.modes;
         if (small) modes = modes.filter(m => m !== 'local');
         if (!modes.length) modes = g.modes.slice(0, 1);

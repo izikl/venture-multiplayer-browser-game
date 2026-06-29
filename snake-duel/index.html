@@ -199,6 +199,17 @@
     .code-box::placeholder { color: var(--text-muted); letter-spacing: 6px; }
     .overlay.confirm { z-index: 115; }
 
+    /* Level X intro shown for a moment before a vs-computer game starts */
+    .level-intro { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; pointer-events: none; background: rgba(10, 12, 20, 0.5); }
+    .level-intro.hidden { display: none; }
+    .level-intro-text {
+      font-size: 3.2rem; font-weight: 900; letter-spacing: -0.5px;
+      background: linear-gradient(135deg, var(--green) 0%, var(--pink) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      animation: levelpop 0.4s ease;
+    }
+    @keyframes levelpop { 0% { transform: scale(0.6); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
     /* speed + accordion inside How to play */
     .speed-control { width: 100%; max-width: 300px; display: flex; flex-direction: column; gap: 6px; }
     .speed-label { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
@@ -236,6 +247,8 @@
   <a href="/" class="hub-link">&#8592; My Plays</a>
   <button type="button" class="exit-btn" id="exitBtn">&#10005; Exit</button>
 
+  <div class="level-intro hidden" id="levelIntro"><div class="level-intro-text" id="levelIntroText">Level 1</div></div>
+
   <!-- Player 2 pad (top, rotated to face the player at the other end) -->
   <div class="pad p2" id="padTop">
     <div class="dpad">
@@ -268,9 +281,9 @@
       <div class="overlay-title">Snake Duel</div>
       <p class="overlay-text">Two snakes, one arena. Grow to 8 to win, or shoot your rival to pieces.</p>
       <div class="btn-row">
-        <button class="btn" id="btn-go-online">Play online</button>
-        <button class="btn btn-secondary" id="btn-go-ai">Play vs computer</button>
-        <button class="btn btn-secondary" id="btn-go-local">Play local</button>
+        <button class="btn" id="btn-go-ai">Play vs computer</button>
+        <button class="btn btn-secondary" id="btn-go-online">Play online</button>
+        <button class="btn btn-secondary" id="btn-go-local">2 players (same device)</button>
       </div>
     </div>
   </div>
@@ -538,6 +551,13 @@
     function loadAiLevel() { try { var v = parseInt(localStorage.getItem('sd_ai_level'), 10); if (v >= 1 && v <= AI_MAX_LEVEL) aiLevel = v; } catch (e) {} }
     function saveAiLevel() { try { localStorage.setItem('sd_ai_level', String(aiLevel)); } catch (e) {} }
     function updateAiLevelLabel() { var el = document.getElementById('aiLevelLabel'); if (el) el.textContent = 'Level ' + aiLevel + ' of ' + AI_MAX_LEVEL; }
+    // Flash "Level X" for ~2 seconds, then run the callback to start play.
+    function showLevelIntro(cb) {
+      var el = document.getElementById('levelIntro');
+      document.getElementById('levelIntroText').textContent = 'Level ' + aiLevel;
+      el.classList.remove('hidden');
+      setTimeout(function () { el.classList.add('hidden'); if (cb) cb(); }, 2000);
+    }
     // Higher level -> fewer wandering mistakes and more accurate shooting.
     function aiParams() { var t = (aiLevel - 1) / (AI_MAX_LEVEL - 1); return { mistakeProb: 0.6 * (1 - t), fireChance: t }; }
 
@@ -610,7 +630,13 @@
       remoteState = null; running = true; paused = false; lastSnakeStep = 0; lastProjStep = 0;
       body.classList.add('session'); body.classList.remove('pregame'); hideOverlays(); setupLayout();
       if (rafId) cancelAnimationFrame(rafId);
-      rafId = requestAnimationFrame(engineStep);
+      if (m === 'ai') {
+        // Show "Level X" for a couple of seconds, then start playing.
+        draw(game);
+        showLevelIntro(function () { lastSnakeStep = 0; lastProjStep = 0; rafId = requestAnimationFrame(engineStep); });
+      } else {
+        rafId = requestAnimationFrame(engineStep);
+      }
       if (m === 'host') netSend({ t: 'state', s: game.snapshot() });
     }
     function startLocal() { startEngineGame('local'); }
@@ -635,11 +661,15 @@
       else if (status === 'p1') text = 'Green reached the win or left Pink with nothing.';
       else text = 'Pink reached the win or left Green with nothing.';
       if (ai) {
-        var leveled = aiLevel < AI_MAX_LEVEL;
-        if (leveled) { aiLevel++; saveAiLevel(); updateAiLevelLabel(); }
-        text += leveled
-          ? (' Next game the computer steps up to Level ' + aiLevel + ' of ' + AI_MAX_LEVEL + '.')
-          : (' The computer is already at its toughest, Level ' + AI_MAX_LEVEL + '.');
+        // The computer only steps up after you beat the current level.
+        if (status === 'p1' && aiLevel < AI_MAX_LEVEL) {
+          aiLevel++; saveAiLevel(); updateAiLevelLabel();
+          text += ' Next game the computer steps up to Level ' + aiLevel + ' of ' + AI_MAX_LEVEL + '.';
+        } else if (status === 'p1') {
+          text += ' The computer is already at its toughest, Level ' + AI_MAX_LEVEL + '.';
+        } else {
+          text += ' The computer stays at Level ' + aiLevel + ' of ' + AI_MAX_LEVEL + ' until you win.';
+        }
       }
       resultText.textContent = text;
       showOverlay('resultOverlay');
