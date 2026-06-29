@@ -35,6 +35,7 @@
     "accent": "#ff7a45",
     "modes": [
       "online",
+      "ai",
       "local"
     ]
   }

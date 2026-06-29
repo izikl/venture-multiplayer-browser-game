@@ -269,6 +269,7 @@
       <p class="overlay-text">Two snakes, one arena. Grow to 6 to win, or shoot your rival to pieces.</p>
       <div class="btn-row">
         <button class="btn" id="btn-go-online">Play online</button>
+        <button class="btn btn-secondary" id="btn-go-ai">Play vs computer</button>
         <button class="btn btn-secondary" id="btn-go-local">Play local</button>
       </div>
     </div>
@@ -491,7 +492,7 @@
     var PREVENT = { Space: 1, Enter: 1, ArrowUp: 1, ArrowDown: 1, ArrowLeft: 1, ArrowRight: 1 };
     window.addEventListener('keydown', function (e) {
       if (PREVENT[e.code] && document.activeElement && document.activeElement.tagName !== 'INPUT') e.preventDefault();
-      if (e.code === 'KeyP' && (mode === 'local' || mode === 'host')) { if (running) paused = !paused; return; }
+      if (e.code === 'KeyP' && (mode === 'local' || mode === 'host' || mode === 'ai')) { if (running) paused = !paused; return; }
       if (!running || paused) return;
       if (mode === 'local') {
         if (LOCAL_KEYMAP[e.code]) game.setDir(LOCAL_KEYMAP[e.code][0], LOCAL_KEYMAP[e.code][1]);
@@ -525,6 +526,41 @@
       snake.cells.forEach(function (c, i) { ctx.fillStyle = i === 0 ? headColor : bodyColor; roundCell(c.x, c.y, i === 0 ? 8 : 5); });
     }
 
+    // ---- computer opponent (player 2) ----
+    function aiMove() {
+      if (!game || !game.snakes || game.status !== 'playing') return;
+      var me = game.snakes[1], foe = game.snakes[0];
+      if (!me || !me.cells || !me.cells.length) return;
+      var head = me.cells[0];
+      var curDir = dirName(me.dir);
+      var blocked = {};
+      [me, foe].forEach(function (s) {
+        if (!s || !s.cells) return;
+        for (var i = 0; i < s.cells.length - 1; i++) blocked[s.cells[i].x + ',' + s.cells[i].y] = true;
+      });
+      var food = game.food || [];
+      function wrapCell(c) { return { x: ((c.x % COLS) + COLS) % COLS, y: ((c.y % ROWS) + ROWS) % ROWS }; }
+      function wdist(a, b) { var dx = Math.abs(a.x - b.x); dx = Math.min(dx, COLS - dx); var dy = Math.abs(a.y - b.y); dy = Math.min(dy, ROWS - dy); return dx + dy; }
+      function nearestFood(c) { if (!food.length) return 0; var best = 1e9; food.forEach(function (f) { var d = wdist(c, f); if (d < best) best = d; }); return best; }
+      var best = null, bestScore = Infinity;
+      ['up', 'down', 'left', 'right'].forEach(function (name) {
+        if (curDir && INV[name] === curDir) return;
+        var nh = wrapCell({ x: head.x + DIRS[name].x, y: head.y + DIRS[name].y });
+        var score = (blocked[nh.x + ',' + nh.y] ? 1000 : 0) + nearestFood(nh) + (name === curDir ? -0.25 : 0);
+        if (score < bestScore) { bestScore = score; best = name; }
+      });
+      if (best && best !== curDir) game.setDir(2, best);
+      // Fire when the human snake is lined up ahead (the engine enforces the cooldown).
+      if (foe && foe.cells && foe.cells.length && curDir) {
+        var d = DIRS[curDir], fh = foe.cells[0], ahead = false;
+        if (d.x > 0 && fh.y === head.y) ahead = ((fh.x - head.x + COLS) % COLS) <= 7;
+        else if (d.x < 0 && fh.y === head.y) ahead = ((head.x - fh.x + COLS) % COLS) <= 7;
+        else if (d.y > 0 && fh.x === head.x) ahead = ((fh.y - head.y + ROWS) % ROWS) <= 7;
+        else if (d.y < 0 && fh.x === head.x) ahead = ((head.y - fh.y + ROWS) % ROWS) <= 7;
+        if (ahead) game.fire(2);
+      }
+    }
+
     // ---- loops ----
     function engineStep(ts) {
       if (!running) return;
@@ -533,7 +569,7 @@
       if (!lastSnakeStep) { lastSnakeStep = ts; lastProjStep = ts; }
       var changed = false;
       if (ts - lastProjStep >= PROJ_MS) { game.tickProjectiles(); lastProjStep = ts; changed = true; }
-      if (ts - lastSnakeStep >= SNAKE_MS) { game.tickSnakes(); lastSnakeStep = ts; changed = true; }
+      if (ts - lastSnakeStep >= SNAKE_MS) { if (mode === 'ai') aiMove(); game.tickSnakes(); lastSnakeStep = ts; changed = true; }
       draw(game); updateBadges();
       if (mode === 'host' && changed) netSend({ t: 'state', s: game.snapshot() });
       if (game.status !== 'playing') { if (mode === 'host') netSend({ t: 'state', s: game.snapshot() }); endGame(game.status); }
@@ -559,6 +595,7 @@
     }
     function startLocal() { startEngineGame('local'); }
     function startHost() { startEngineGame('host'); }
+    function startAI() { startEngineGame('ai'); }
     function beginClient() {
       mode = 'client'; localPlayer = 2; running = true; paused = false;
       body.classList.add('session'); body.classList.remove('pregame'); hideOverlays(); setupLayout();
@@ -569,9 +606,11 @@
     function endGame(status) {
       if (!running) return;
       running = false; if (rafId) cancelAnimationFrame(rafId);
-      var msg = { p1: 'Green wins!', p2: 'Pink wins!', tie: "It's a tie!" };
+      var ai = (mode === 'ai');
+      var msg = ai ? { p1: 'You win!', p2: 'The computer wins!', tie: "It's a tie!" } : { p1: 'Green wins!', p2: 'Pink wins!', tie: "It's a tie!" };
       resultTitle.textContent = msg[status] || 'Result';
-      if (status === 'tie') resultText.textContent = 'Both players went out at the same moment. Line up a rematch.';
+      if (status === 'tie') resultText.textContent = 'Both snakes went out at the same moment. Line up a rematch.';
+      else if (ai) resultText.textContent = (status === 'p1') ? 'You grew to the win or left the computer with nothing. Nicely played.' : 'The computer reached the win or left you with nothing. Try again.';
       else if (status === 'p1') resultText.textContent = 'Green reached the win or left Pink with nothing.';
       else resultText.textContent = 'Pink reached the win or left Green with nothing.';
       showOverlay('resultOverlay');
@@ -720,7 +759,7 @@
     var landscapeMQ = window.matchMedia('(orientation: landscape) and (pointer: coarse)');
     var autoPaused = false;
     function checkOrientation() {
-      if (landscapeMQ.matches) { if (running && !paused && (mode === 'local' || mode === 'host')) { paused = true; autoPaused = true; } }
+      if (landscapeMQ.matches) { if (running && !paused && (mode === 'local' || mode === 'host' || mode === 'ai')) { paused = true; autoPaused = true; } }
       else if (autoPaused) { paused = false; autoPaused = false; }
     }
     if (landscapeMQ.addEventListener) landscapeMQ.addEventListener('change', checkOrientation);
@@ -728,6 +767,7 @@
 
     // ---- wiring ----
     document.getElementById('btn-go-online').addEventListener('click', showOnline);
+    document.getElementById('btn-go-ai').addEventListener('click', startAI);
     document.getElementById('btn-go-local').addEventListener('click', startLocal);
     document.getElementById('btn-invite').addEventListener('click', inviteHost);
     document.getElementById('btn-join').addEventListener('click', joinMode);
@@ -743,6 +783,7 @@
     document.getElementById('btn-rematch').addEventListener('click', function () {
       if (mode === 'client') { netSend({ t: 'rematch' }); resultText.textContent = 'Asking the host for a rematch...'; }
       else if (mode === 'host') startHost();
+      else if (mode === 'ai') startAI();
       else startLocal();
     });
     document.getElementById('btn-howto').addEventListener('click', showHowto);
@@ -752,7 +793,7 @@
     var confirmOverlay = document.getElementById('confirmOverlay');
     var exitPausedGame = false;
     document.getElementById('exitBtn').addEventListener('click', function () {
-      if (running && !paused && (mode === 'local' || mode === 'host')) { paused = true; exitPausedGame = true; }
+      if (running && !paused && (mode === 'local' || mode === 'host' || mode === 'ai')) { paused = true; exitPausedGame = true; }
       confirmOverlay.classList.remove('hidden');
     });
     document.getElementById('btn-stay').addEventListener('click', function () {
@@ -766,6 +807,7 @@
       var params = new URLSearchParams(location.search);
       var m = params.get('mode');
       if (m === 'local' && !isPhone()) startLocal();
+      else if (m === 'ai') startAI();
       else if (m === 'online') showOnline();
       else if (m === 'local' && isPhone()) showOnline();
       else showLanding();

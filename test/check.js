@@ -202,3 +202,13 @@ test('snake-duel supports keyboard, touch pads, and online play', () => {
   assert.ok(html.includes('/snake-duel/engine.js'), 'must load the engine');
 });
 
+test('snake-duel offers a vs-computer (AI) mode', () => {
+  const html = read('snake-duel/index.html');
+  assert.ok(html.includes('Play vs computer'), 'must offer a play-vs-computer button');
+  assert.ok(/function aiMove/.test(html), 'must include the computer-opponent controller');
+  assert.ok(html.includes("startAI"), 'must wire an AI game start');
+  const games = JSON.parse(read('games.json'));
+  const sd = games.find(g => g.id === 'snake-duel');
+  assert.ok(sd && Array.isArray(sd.modes) && sd.modes.includes('ai'), 'games.json snake-duel must list the ai mode');
+});
+

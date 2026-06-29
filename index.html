@@ -258,11 +258,12 @@
         <div class="card-blurb">${g.blurb}</div>`;
       if (Array.isArray(g.modes) && g.modes.length) {
         const small = Math.min(window.innerWidth, window.innerHeight) < 600;
+        const MODE_LABELS = { online: 'Play online', ai: 'Play vs computer', local: 'Play local' };
         let modes = g.modes;
-        if (small) modes = modes.filter(m => m === 'online');
+        if (small) modes = modes.filter(m => m !== 'local');
         if (!modes.length) modes = g.modes.slice(0, 1);
         const btns = modes.map((m, i) =>
-          `<a class="card-play-btn${i > 0 ? ' ghost' : ''}" href="${g.route}?mode=${m}">Play ${m}</a>`
+          `<a class="card-play-btn${i > 0 ? ' ghost' : ''}" href="${g.route}?mode=${m}">${MODE_LABELS[m] || ('Play ' + m)}</a>`
         ).join('');
         return `<div class="game-card no-link" style="--card-accent:${g.accent}" data-game-id="${g.id}">${inner}<div class="card-btn-row">${btns}</div></div>`;
       }
