@@ -212,6 +212,18 @@
         transition-duration: 0.01ms !important;
       }
     }
+
+    /* On short screens, compact the chrome so the board always fits. */
+    @media (max-height: 600px) {
+      .logo p { display: none; }
+      .logo h1 { font-size: 1.4rem; }
+      .logo { margin-bottom: 0; }
+      #game-wrap { gap: 8px; padding-top: 8px; }
+      .hub-header { padding-top: 8px; }
+      .score-bar { padding: 8px 16px; }
+      .score-value { font-size: 1.1rem; }
+      body { padding-bottom: 12px; }
+    }
   </style>
 </head>
 <body>
@@ -264,10 +276,6 @@
         </div>
       </div>
     </div>
-
-    <div class="controls-hint" id="controls-live" style="display:none">
-      Arrow / WASD to steer &nbsp;|&nbsp; Swipe on mobile
-    </div>
   </div>
 
   <script>
@@ -289,7 +297,6 @@
   const subEl    = document.getElementById('gameover-sub');
   const startOv  = document.getElementById('overlay-start');
   const gameoverOv = document.getElementById('overlay-gameover');
-  const controlsHint = document.getElementById('controls-live');
 
   let snake, dir, nextDir, food, score, level, pellets, tickTimer, running;
 
@@ -427,7 +434,6 @@
   function startGame() {
     startOv.classList.add('hidden');
     gameoverOv.classList.add('hidden');
-    controlsHint.style.display = '';
     initGame();
     running = true;
     tickTimer = setInterval(tick, INITIAL_INTERVAL);
@@ -443,7 +449,6 @@
       ? 'New best score!'
       : 'Best: ' + best + ' pts';
     gameoverOv.classList.remove('hidden');
-    controlsHint.style.display = 'none';
     updateUI();
   }
 
@@ -491,6 +496,21 @@
   // Init display
   bestEl.textContent = loadBest();
   initGame();
+
+  // Keep the whole board on screen: shrink it to fit the viewport height on short screens.
+  function fitBoard() {
+    var wrap = document.getElementById('canvas-wrap');
+    if (!wrap) return;
+    var availW = (wrap.parentNode && wrap.parentNode.clientWidth) || window.innerWidth;
+    var top = wrap.getBoundingClientRect().top;
+    var availH = window.innerHeight - top - 40;
+    var size = Math.max(150, Math.min(500, availW, availH));
+    wrap.style.maxWidth = size + 'px';
+  }
+  window.addEventListener('resize', fitBoard);
+  window.addEventListener('orientationchange', function () { setTimeout(fitBoard, 250); });
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', fitBoard);
+  fitBoard();
 
   // roundRect polyfill for older browsers
   if (!CanvasRenderingContext2D.prototype.roundRect) {

@@ -559,7 +559,8 @@
       setTimeout(function () { el.classList.add('hidden'); if (cb) cb(); }, 2000);
     }
     // Higher level -> fewer wandering mistakes and more accurate shooting.
-    function aiParams() { var t = (aiLevel - 1) / (AI_MAX_LEVEL - 1); return { mistakeProb: 0.6 * (1 - t), fireChance: t }; }
+    // Gentle ramp: even the top level stays beatable (about as forgiving as the old mid game).
+    function aiParams() { var t = (aiLevel - 1) / (AI_MAX_LEVEL - 1); return { mistakeProb: 0.72 - 0.32 * t, fireChance: 0.40 * t }; }
 
     function aiMove() {
       if (!game || !game.snakes || game.status !== 'playing') return;
