@@ -810,19 +810,6 @@
       setTimeout(function () { resetAiBtn.textContent = 'Reset to level 1'; }, 1300);
     });
 
-    // ---- fullscreen on first interaction (where supported) ----
-    var fsTried = false;
-    function tryFullscreen() {
-      if (fsTried) return; fsTried = true;
-      var docEl = document.documentElement;
-      var standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-      if (standalone) return;
-      var req = docEl.requestFullscreen || docEl.webkitRequestFullscreen;
-      if (req) { try { req.call(docEl); } catch (e) {} }
-    }
-    window.addEventListener('pointerdown', tryFullscreen, { once: true });
-    window.addEventListener('keydown', tryFullscreen, { once: true });
-
     // ---- portrait lock ----
     try { if (screen.orientation && screen.orientation.lock) screen.orientation.lock('portrait').catch(function () {}); } catch (e) {}
     var landscapeMQ = window.matchMedia('(orientation: landscape) and (pointer: coarse)');
