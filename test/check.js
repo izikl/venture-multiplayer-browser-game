@@ -212,3 +212,11 @@ test('snake-duel offers a vs-computer (AI) mode', () => {
   assert.ok(sd && Array.isArray(sd.modes) && sd.modes.includes('ai'), 'games.json snake-duel must list the ai mode');
 });
 
+test('snake-duel computer difficulty ramps up, persists, and can be reset', () => {
+  const html = read('snake-duel/index.html');
+  assert.ok(html.includes('sd_ai_level'), 'must persist the AI level in localStorage');
+  assert.ok(/function aiParams/.test(html), 'must scale AI behavior by level');
+  assert.ok(html.includes('Reset to level 1'), 'How to play must offer a reset-level control');
+  assert.ok(/aiLevel\+\+/.test(html), 'AI level must increase from game to game');
+});
+

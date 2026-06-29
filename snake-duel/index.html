@@ -341,6 +341,11 @@
         <div class="speed-ticks"><span>Relaxed</span><span>Turbo</span></div>
       </div>
 
+      <div class="speed-control" id="diffControl">
+        <span class="speed-label">Computer difficulty: <b id="aiLevelLabel">Level 1</b></span>
+        <button class="btn btn-secondary" id="btn-reset-ai" type="button">Reset to level 1</button>
+      </div>
+
       <button class="btn" id="btn-howto-back">Back</button>
     </div>
   </div>
@@ -372,6 +377,9 @@
     var speedLevel = 2;
     var SNAKE_MS = SPEEDS[speedLevel].snake;
     var PROJ_MS = SPEEDS[speedLevel].proj;
+    // Computer difficulty: starts easy (level 1) and ramps up one step after every game vs the computer.
+    var AI_MAX_LEVEL = 8;
+    var aiLevel = 1;
 
     // mode: 'local' (two players, one device) | 'host' (online, you are P1) | 'client' (online, you are P2)
     var mode = 'local';
@@ -527,6 +535,12 @@
     }
 
     // ---- computer opponent (player 2) ----
+    function loadAiLevel() { try { var v = parseInt(localStorage.getItem('sd_ai_level'), 10); if (v >= 1 && v <= AI_MAX_LEVEL) aiLevel = v; } catch (e) {} }
+    function saveAiLevel() { try { localStorage.setItem('sd_ai_level', String(aiLevel)); } catch (e) {} }
+    function updateAiLevelLabel() { var el = document.getElementById('aiLevelLabel'); if (el) el.textContent = 'Level ' + aiLevel + ' of ' + AI_MAX_LEVEL; }
+    // Higher level -> fewer wandering mistakes and more accurate shooting.
+    function aiParams() { var t = (aiLevel - 1) / (AI_MAX_LEVEL - 1); return { mistakeProb: 0.6 * (1 - t), fireChance: t }; }
+
     function aiMove() {
       if (!game || !game.snakes || game.status !== 'playing') return;
       var me = game.snakes[1], foe = game.snakes[0];
@@ -542,16 +556,22 @@
       function wrapCell(c) { return { x: ((c.x % COLS) + COLS) % COLS, y: ((c.y % ROWS) + ROWS) % ROWS }; }
       function wdist(a, b) { var dx = Math.abs(a.x - b.x); dx = Math.min(dx, COLS - dx); var dy = Math.abs(a.y - b.y); dy = Math.min(dy, ROWS - dy); return dx + dy; }
       function nearestFood(c) { if (!food.length) return 0; var best = 1e9; food.forEach(function (f) { var d = wdist(c, f); if (d < best) best = d; }); return best; }
-      var best = null, bestScore = Infinity;
+      var p = aiParams();
+      var best = null, bestScore = Infinity, safe = [];
       ['up', 'down', 'left', 'right'].forEach(function (name) {
         if (curDir && INV[name] === curDir) return;
         var nh = wrapCell({ x: head.x + DIRS[name].x, y: head.y + DIRS[name].y });
-        var score = (blocked[nh.x + ',' + nh.y] ? 1000 : 0) + nearestFood(nh) + (name === curDir ? -0.25 : 0);
+        var deadly = blocked[nh.x + ',' + nh.y];
+        if (!deadly) safe.push(name);
+        var score = (deadly ? 1000 : 0) + nearestFood(nh) + (name === curDir ? -0.25 : 0);
         if (score < bestScore) { bestScore = score; best = name; }
       });
-      if (best && best !== curDir) game.setDir(2, best);
-      // Fire when the human snake is lined up ahead (the engine enforces the cooldown).
-      if (foe && foe.cells && foe.cells.length && curDir) {
+      // At low levels the computer often wanders instead of chasing food optimally.
+      var choice = best;
+      if (safe.length && Math.random() < p.mistakeProb) choice = safe[(Math.random() * safe.length) | 0];
+      if (choice && choice !== curDir) game.setDir(2, choice);
+      // Shooting accuracy scales with level; at level 1 the computer never fires.
+      if (Math.random() < p.fireChance && foe && foe.cells && foe.cells.length && curDir) {
         var d = DIRS[curDir], fh = foe.cells[0], ahead = false;
         if (d.x > 0 && fh.y === head.y) ahead = ((fh.x - head.x + COLS) % COLS) <= 7;
         else if (d.x < 0 && fh.y === head.y) ahead = ((head.x - fh.x + COLS) % COLS) <= 7;
@@ -609,10 +629,19 @@
       var ai = (mode === 'ai');
       var msg = ai ? { p1: 'You win!', p2: 'The computer wins!', tie: "It's a tie!" } : { p1: 'Green wins!', p2: 'Pink wins!', tie: "It's a tie!" };
       resultTitle.textContent = msg[status] || 'Result';
-      if (status === 'tie') resultText.textContent = 'Both snakes went out at the same moment. Line up a rematch.';
-      else if (ai) resultText.textContent = (status === 'p1') ? 'You grew to the win or left the computer with nothing. Nicely played.' : 'The computer reached the win or left you with nothing. Try again.';
-      else if (status === 'p1') resultText.textContent = 'Green reached the win or left Pink with nothing.';
-      else resultText.textContent = 'Pink reached the win or left Green with nothing.';
+      var text;
+      if (status === 'tie') text = 'Both snakes went out at the same moment. Line up a rematch.';
+      else if (ai) text = (status === 'p1') ? 'You grew to the win or left the computer with nothing. Nicely played.' : 'The computer reached the win or left you with nothing. Try again.';
+      else if (status === 'p1') text = 'Green reached the win or left Pink with nothing.';
+      else text = 'Pink reached the win or left Green with nothing.';
+      if (ai) {
+        var leveled = aiLevel < AI_MAX_LEVEL;
+        if (leveled) { aiLevel++; saveAiLevel(); updateAiLevelLabel(); }
+        text += leveled
+          ? (' Next game the computer steps up to Level ' + aiLevel + ' of ' + AI_MAX_LEVEL + '.')
+          : (' The computer is already at its toughest, Level ' + AI_MAX_LEVEL + '.');
+      }
+      resultText.textContent = text;
       showOverlay('resultOverlay');
     }
 
@@ -654,9 +683,9 @@
           ? 'Player 1 - Green: move <span class="k">W</span> <span class="k">A</span> <span class="k">S</span> <span class="k">D</span>, fire <span class="k">Space</span>.<br>Player 2 - Pink: move with the <span class="k">Arrow keys</span>, fire <span class="k">Enter</span>.'
           : 'Move with <span class="k">W</span> <span class="k">A</span> <span class="k">S</span> <span class="k">D</span> or the <span class="k">Arrow keys</span>. Fire with <span class="k">Space</span> or <span class="k">Enter</span>.';
       }
+      updateAiLevelLabel();
       showOverlay('howtoOverlay');
     }
-
     // ---- networking (PeerJS, free peer to peer) ----
     var PREFIX = 'myplays-snakeduel-';
     var codeBox = document.getElementById('codeBox');
@@ -740,6 +769,15 @@
     try { var sv = parseInt(localStorage.getItem('sd_speed'), 10); if (sv >= 1 && sv <= 5) speedRange.value = String(sv); } catch (e) {}
     speedRange.addEventListener('input', updateSpeedLabel);
     updateSpeedLabel();
+
+    // ---- computer difficulty ----
+    loadAiLevel(); updateAiLevelLabel();
+    var resetAiBtn = document.getElementById('btn-reset-ai');
+    if (resetAiBtn) resetAiBtn.addEventListener('click', function () {
+      aiLevel = 1; saveAiLevel(); updateAiLevelLabel();
+      resetAiBtn.textContent = 'Difficulty reset';
+      setTimeout(function () { resetAiBtn.textContent = 'Reset to level 1'; }, 1300);
+    });
 
     // ---- fullscreen on first interaction (where supported) ----
     var fsTried = false;
