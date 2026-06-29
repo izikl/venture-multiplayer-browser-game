@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Snake Duel - My Plays</title>
-  <meta name="description" content="Snake Duel: two players duel head to head in a snake arena where you can also shoot the other snake. Grow to 6 to win. Play on a keyboard, on an iPad, or online with a friend. Free, no account, on My Plays.">
+  <meta name="description" content="Snake Duel: two players duel head to head in a snake arena where you can also shoot the other snake. Grow to 8 to win. Play on a keyboard, on an iPad, or online with a friend. Free, no account, on My Plays.">
   <meta property="og:title" content="Snake Duel - My Plays">
-  <meta property="og:description" content="Two-player competitive snake with shooting. Keyboard, iPad, or online. Grow to 6 cubes to win.">
+  <meta property="og:description" content="Two-player competitive snake with shooting. Keyboard, iPad, or online. Grow to 8 cubes to win.">
   <meta property="og:type" content="website">
   <link rel="canonical" href="https://myplays.net/snake-duel">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐍</text></svg>">
@@ -266,7 +266,7 @@
   <div class="overlay hidden" id="landingOverlay">
     <div class="card">
       <div class="overlay-title">Snake Duel</div>
-      <p class="overlay-text">Two snakes, one arena. Grow to 6 to win, or shoot your rival to pieces.</p>
+      <p class="overlay-text">Two snakes, one arena. Grow to 8 to win, or shoot your rival to pieces.</p>
       <div class="btn-row">
         <button class="btn" id="btn-go-online">Play online</button>
         <button class="btn btn-secondary" id="btn-go-ai">Play vs computer</button>
@@ -671,7 +671,7 @@
     }
 
     // ---- How to play ----
-    var RULES = 'Each snake starts at 3 cubes. Eat food to grow, reach 6 cubes to win. Shoot the other snake to blow off a cube, a head shot pushes their head back, any other hit closes the gap. The board wraps, slide off one edge and you come back on the opposite side. Hit the other snake or yourself and you lose. Two heads colliding is a tie.';
+    var RULES = 'Each snake starts at 3 cubes. Eat food to grow, reach 8 cubes to win. Shoot the other snake to blow off a cube, a head shot pushes their head back, any other hit closes the gap. The board wraps, slide off one edge and you come back on the opposite side. Hit the other snake or yourself and you lose. Two heads colliding is a tie.';
     document.getElementById('rulesTextKbd').textContent = RULES;
     document.getElementById('rulesTextTouch').textContent = RULES;
     function showHowto() {

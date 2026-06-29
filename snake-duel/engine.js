@@ -2,7 +2,7 @@
 //
 // Two snakes duel on a grid. Implements the exact owner rules:
 //  - Each snake starts at 3 cubes (head + 2 body).
-//  - Reaching 6 cubes WINS (the other player loses).
+//  - Reaching 8 cubes WINS (the other player loses).
 //  - Dropping to 0 cubes loses.
 //  - A head into a wall, the other snake, or itself loses.
 //  - Two heads colliding (head to head) is a tie.
@@ -34,7 +34,7 @@
       cols: 21,
       rows: 15,
       startLen: 3,
-      winLen: 6,
+      winLen: 8,
       foodCount: 2,
       fireCooldownMs: 160
     };

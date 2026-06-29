@@ -37,13 +37,13 @@ test('eating food grows the snake by one cube', () => {
   assert.strictEqual(g.status, 'playing');
 });
 
-test('reaching 6 cubes wins for that player', () => {
+test('reaching 8 cubes wins for that player', () => {
   const g = quietGame();
-  setSnake(g.snakes[0], [[6, MID], [5, MID], [4, MID], [3, MID], [2, MID]], 'right');
+  setSnake(g.snakes[0], [[6, MID], [5, MID], [4, MID], [3, MID], [2, MID], [1, MID], [0, MID]], 'right');
   setSnake(g.snakes[1], [[15, 1], [16, 1], [17, 1]], 'left');
   g.food = [{ x: 7, y: MID }];
   g.tickSnakes();
-  assert.strictEqual(g.snakes[0].cells.length, 6);
+  assert.strictEqual(g.snakes[0].cells.length, 8);
   assert.strictEqual(g.status, 'p1');
 });
 
