@@ -71,20 +71,22 @@
     /* ---- touch pads ---- */
     .pad {
       display: none; width: 100%; align-items: center; justify-content: center;
+      gap: clamp(18px, 8vw, 64px);
       padding: 8px 4px; position: relative; z-index: 1; touch-action: none; user-select: none;
     }
     .pad.show { display: flex; }
     .pad.p2 { transform: rotate(180deg); }
     .dpad {
       display: grid;
-      grid-template-columns: repeat(3, 56px);
-      grid-template-rows: repeat(3, 56px);
-      gap: 9px;
+      --cell: clamp(64px, 19vw, 98px);
+      grid-template-columns: repeat(3, var(--cell));
+      grid-template-rows: repeat(3, var(--cell));
+      gap: clamp(8px, 2.4vw, 13px);
     }
     .dbtn {
       position: relative;
       background: var(--surface2); border: 1px solid var(--border); color: var(--text);
-      border-radius: 50%; font-size: 1.5rem;
+      border-radius: 50%; font-size: clamp(1.5rem, 6.5vw, 2.2rem);
       display: flex; align-items: center; justify-content: center; cursor: pointer; touch-action: none;
     }
     .dbtn.up { grid-column: 2; grid-row: 1; }
@@ -94,6 +96,18 @@
     .dbtn:active { background: var(--primary); border-color: var(--primary); }
     .pad.p1 .dbtn:active, body.me-green .pad .dbtn:active { background: var(--green); border-color: var(--green); }
     .pad.p2 .dbtn:active, body.me-pink .pad .dbtn:active { background: var(--pink); border-color: var(--pink); }
+    /* dedicated fire button (large, gamepad-style action button) */
+    .firebtn {
+      width: clamp(82px, 24vw, 124px); height: clamp(82px, 24vw, 124px);
+      border-radius: 50%; font-size: clamp(2rem, 9vw, 3rem); line-height: 1;
+      background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
+      touch-action: none; user-select: none; -webkit-tap-highlight-color: transparent;
+      transition: transform 80ms ease;
+    }
+    .firebtn:active { transform: scale(0.93); background: var(--primary); border-color: var(--primary); }
+    .pad.p1 .firebtn:active, body.me-green .firebtn:active { background: var(--green); border-color: var(--green); }
+    .pad.p2 .firebtn:active, body.me-pink .firebtn:active { background: var(--pink); border-color: var(--pink); }
     /* fire badge: rides on the button matching the snake's current heading */
     .dbtn.fire::after {
       content: '🔥';
@@ -230,6 +244,7 @@
       <button class="dbtn right" data-dir="right" aria-label="Player 2 right">&#9654;</button>
       <button class="dbtn down"  data-dir="down"  aria-label="Player 2 down">&#9660;</button>
     </div>
+    <button class="firebtn" data-fire aria-label="Player 2 fire">&#128293;</button>
   </div>
 
   <div class="stage">
@@ -244,6 +259,7 @@
       <button class="dbtn right" data-dir="right" aria-label="right">&#9654;</button>
       <button class="dbtn down"  data-dir="down"  aria-label="down">&#9660;</button>
     </div>
+    <button class="firebtn" data-fire aria-label="Fire">&#128293;</button>
   </div>
 
   <!-- Landing: choose how to play -->
@@ -315,6 +331,7 @@
 
       <div id="howtoTouch" class="hidden">
         <p class="overlay-text" id="rulesTextTouch"></p>
+        <p class="overlay-text">Steer with the large arrow pad. Tap the fire button to shoot.</p>
       </div>
 
       <div class="speed-control">
@@ -446,6 +463,12 @@
           var dir = resolvedDir(pos, btn.getAttribute('data-dir'));
           if (currentDirName(player) === dir) inputFire(player); else inputDir(player, dir);
         });
+      });
+      var fireEl = padEl.querySelector('[data-fire]');
+      if (fireEl) fireEl.addEventListener('pointerdown', function (e) {
+        e.preventDefault();
+        if (!running || paused) return;
+        inputFire(padPlayer(pos));
       });
     }
     bindPad(padTop, 'top'); bindPad(padBottom, 'bottom');
