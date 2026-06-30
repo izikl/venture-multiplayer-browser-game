@@ -69,44 +69,33 @@
     }
 
     /* ---- touch pads ---- */
+    /* ---- touch control: the whole area under the board is a trackpad ---- */
     .pad {
-      display: none; width: 100%; align-items: center; justify-content: center;
-      gap: clamp(12px, 5vw, 32px);
-      padding: 8px 10px; position: relative; z-index: 1; touch-action: none; user-select: none;
+      display: none; width: 100%;
+      padding: 6px 8px 8px; position: relative; z-index: 1; touch-action: none; user-select: none;
     }
     .pad.show { display: flex; }
     .pad.p2 { transform: rotate(180deg); }
-    /* swipe trackpad: drag like a small touchpad to steer */
+    /* trackpad: swipe to move, tap to fire */
     .trackpad {
-      flex: 1 1 auto; max-width: 340px;
-      height: clamp(120px, 30vw, 190px);
+      flex: 1 1 auto; align-self: stretch; min-height: 110px;
       border-radius: 18px; background: var(--surface2);
       border: 1px dashed var(--border); color: var(--text-muted);
       display: flex; align-items: center; justify-content: center;
-      font-size: 0.82rem; font-weight: 600; text-align: center;
+      font-size: 0.85rem; font-weight: 600; text-align: center;
       touch-action: none; user-select: none; -webkit-tap-highlight-color: transparent;
     }
     .trackpad-hint { pointer-events: none; opacity: 0.7; }
     .pad.p1 .trackpad.active, body.me-green .trackpad.active { border-style: solid; border-color: var(--green); }
     .pad.p2 .trackpad.active, body.me-pink .trackpad.active { border-style: solid; border-color: var(--pink); }
-    /* dedicated fire button (large, gamepad-style action button) */
-    .firebtn {
-      width: clamp(82px, 24vw, 124px); height: clamp(82px, 24vw, 124px);
-      border-radius: 50%; font-size: clamp(2rem, 9vw, 3rem); line-height: 1;
-      background: var(--surface2); border: 1px solid var(--border); color: var(--text);
-      display: flex; align-items: center; justify-content: center; cursor: pointer;
-      touch-action: none; user-select: none; -webkit-tap-highlight-color: transparent;
-      transition: transform 80ms ease;
-    }
-    .firebtn:active { transform: scale(0.93); background: var(--primary); border-color: var(--primary); }
-    .pad.p1 .firebtn:active, body.me-green .firebtn:active { background: var(--green); border-color: var(--green); }
-    .pad.p2 .firebtn:active, body.me-pink .firebtn:active { background: var(--pink); border-color: var(--pink); }
 
     /* ---- layouts ---- */
     body.kbd { justify-content: center; }
     body.kbd .pad { display: none !important; }
-    body.twopad { justify-content: space-between; }
-    body.onepad { justify-content: space-between; }
+    body.twopad { justify-content: flex-start; }
+    body.onepad { justify-content: flex-start; }
+    body.onepad .pad, body.twopad .pad { flex: 1 1 auto; }
+    body.onepad .stage, body.twopad .stage { flex: 0 0 auto; }
 
     /* ---- portrait lock (touch devices in landscape) ---- */
     .rotate-notice { display: none; }
@@ -238,8 +227,7 @@
 
   <!-- Player 2 pad (top, rotated to face the player at the other end) -->
   <div class="pad p2" id="padTop">
-    <div class="trackpad" data-track aria-label="Player 2: swipe to steer"><span class="trackpad-hint">swipe to steer</span></div>
-    <button class="firebtn" data-fire aria-label="Player 2 fire">&#128293;</button>
+    <div class="trackpad" data-track aria-label="Player 2: swipe to move, tap to fire"><span class="trackpad-hint">swipe to move &middot; tap to fire</span></div>
   </div>
 
   <div class="stage">
@@ -248,8 +236,7 @@
 
   <!-- Player 1 / local-player pad (bottom) -->
   <div class="pad p1" id="padBottom">
-    <div class="trackpad" data-track aria-label="Swipe to steer"><span class="trackpad-hint">swipe to steer</span></div>
-    <button class="firebtn" data-fire aria-label="Fire">&#128293;</button>
+    <div class="trackpad" data-track aria-label="Swipe to move, tap to fire"><span class="trackpad-hint">swipe to move &middot; tap to fire</span></div>
   </div>
 
   <!-- Landing: choose how to play -->
@@ -322,7 +309,7 @@
 
       <div id="howtoTouch" class="hidden">
         <p class="overlay-text" id="rulesTextTouch"></p>
-        <p class="overlay-text">Steer with the large arrow pad. Tap the fire button to shoot.</p>
+        <p class="overlay-text">Swipe anywhere in the area below the board to steer. Tap it to fire.</p>
       </div>
 
       <div class="speed-control">
@@ -401,10 +388,10 @@
       var onepad = body.classList.contains('onepad');
       var cs = getComputedStyle(body);
       var safe = (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0);
-      var padH = (twopad || onepad) ? (padBottom.getBoundingClientRect().height || 188) : 0;
+      var minPad = twopad ? 120 : onepad ? 150 : 0; // trackpad flexes to fill, but keep a minimum
       var exitEl = document.getElementById('exitBtn');
       var exitH = onepad && exitEl ? (exitEl.offsetHeight || 40) + 6 : 0;
-      var reserve = (twopad ? padH * 2 + safe + 8 : onepad ? padH + safe + 8 : safe + 12) + exitH;
+      var reserve = (twopad ? minPad * 2 + safe + 8 : onepad ? minPad + safe + 8 : safe + 12) + exitH;
       var availH = Math.max(160, appH - reserve);
       var availW = window.innerWidth * (body.classList.contains('kbd') ? 0.985 : 0.96);
       var boardW = Math.max(200, Math.min(availW, availH * (COLS / ROWS)));
@@ -456,36 +443,34 @@
     function resolvedDir(pos, base) { return padInvert(pos) ? INV[base] : base; }
 
     function bindPad(padEl, pos) {
-      var fireEl = padEl.querySelector('[data-fire]');
-      if (fireEl) fireEl.addEventListener('pointerdown', function (e) {
+      // The whole pad is a trackpad: swipe to steer, tap (no drag) to fire.
+      // Screen-space deltas map straight to board directions and stay correct
+      // for the rotated top pad in local two-player.
+      var track = padEl.querySelector('[data-track]');
+      if (!track) return;
+      var origin = null, moved = false, THRESH = 22;
+      track.addEventListener('pointerdown', function (e) {
         e.preventDefault();
         if (!running || paused) return;
-        inputFire(padPlayer(pos));
+        origin = { x: e.clientX, y: e.clientY }; moved = false;
+        track.classList.add('active');
+        try { track.setPointerCapture(e.pointerId); } catch (err) {}
       });
-      // Trackpad: drag/swipe to steer. Screen-space deltas map straight to board
-      // directions and stay correct for the rotated top pad in local two-player.
-      var track = padEl.querySelector('[data-track]');
-      if (track) {
-        var origin = null, THRESH = 22;
-        track.addEventListener('pointerdown', function (e) {
-          e.preventDefault();
-          origin = { x: e.clientX, y: e.clientY };
-          track.classList.add('active');
-          try { track.setPointerCapture(e.pointerId); } catch (err) {}
-        });
-        track.addEventListener('pointermove', function (e) {
-          if (!origin || !running || paused) return;
-          var dx = e.clientX - origin.x, dy = e.clientY - origin.y;
-          if (Math.abs(dx) < THRESH && Math.abs(dy) < THRESH) return;
-          var dir = (Math.abs(dx) > Math.abs(dy)) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
-          inputDir(padPlayer(pos), dir);
-          origin = { x: e.clientX, y: e.clientY };
-        });
-        var endTrack = function () { origin = null; track.classList.remove('active'); };
-        track.addEventListener('pointerup', endTrack);
-        track.addEventListener('pointercancel', endTrack);
-        track.addEventListener('lostpointercapture', endTrack);
+      track.addEventListener('pointermove', function (e) {
+        if (!origin || !running || paused) return;
+        var dx = e.clientX - origin.x, dy = e.clientY - origin.y;
+        if (Math.abs(dx) < THRESH && Math.abs(dy) < THRESH) return;
+        var dir = (Math.abs(dx) > Math.abs(dy)) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+        inputDir(padPlayer(pos), dir);
+        moved = true;
+        origin = { x: e.clientX, y: e.clientY };
+      });
+      function endTrack() {
+        if (origin && !moved && running && !paused) inputFire(padPlayer(pos)); // a tap fires
+        origin = null; track.classList.remove('active');
       }
+      track.addEventListener('pointerup', endTrack);
+      track.addEventListener('pointercancel', function () { origin = null; track.classList.remove('active'); });
     }
     bindPad(padTop, 'top'); bindPad(padBottom, 'bottom');
 
