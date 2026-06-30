@@ -71,31 +71,24 @@
     /* ---- touch pads ---- */
     .pad {
       display: none; width: 100%; align-items: center; justify-content: center;
-      gap: clamp(18px, 8vw, 64px);
-      padding: 8px 4px; position: relative; z-index: 1; touch-action: none; user-select: none;
+      gap: clamp(12px, 5vw, 32px);
+      padding: 8px 10px; position: relative; z-index: 1; touch-action: none; user-select: none;
     }
     .pad.show { display: flex; }
     .pad.p2 { transform: rotate(180deg); }
-    .dpad {
-      display: grid;
-      --cell: clamp(64px, 19vw, 98px);
-      grid-template-columns: repeat(3, var(--cell));
-      grid-template-rows: repeat(3, var(--cell));
-      gap: clamp(8px, 2.4vw, 13px);
+    /* swipe trackpad: drag like a small touchpad to steer */
+    .trackpad {
+      flex: 1 1 auto; max-width: 340px;
+      height: clamp(120px, 30vw, 190px);
+      border-radius: 18px; background: var(--surface2);
+      border: 1px dashed var(--border); color: var(--text-muted);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.82rem; font-weight: 600; text-align: center;
+      touch-action: none; user-select: none; -webkit-tap-highlight-color: transparent;
     }
-    .dbtn {
-      position: relative;
-      background: var(--surface2); border: 1px solid var(--border); color: var(--text);
-      border-radius: 50%; font-size: clamp(1.5rem, 6.5vw, 2.2rem);
-      display: flex; align-items: center; justify-content: center; cursor: pointer; touch-action: none;
-    }
-    .dbtn.up { grid-column: 2; grid-row: 1; }
-    .dbtn.left { grid-column: 1; grid-row: 2; }
-    .dbtn.right { grid-column: 3; grid-row: 2; }
-    .dbtn.down { grid-column: 2; grid-row: 3; }
-    .dbtn:active { background: var(--primary); border-color: var(--primary); }
-    .pad.p1 .dbtn:active, body.me-green .pad .dbtn:active { background: var(--green); border-color: var(--green); }
-    .pad.p2 .dbtn:active, body.me-pink .pad .dbtn:active { background: var(--pink); border-color: var(--pink); }
+    .trackpad-hint { pointer-events: none; opacity: 0.7; }
+    .pad.p1 .trackpad.active, body.me-green .trackpad.active { border-style: solid; border-color: var(--green); }
+    .pad.p2 .trackpad.active, body.me-pink .trackpad.active { border-style: solid; border-color: var(--pink); }
     /* dedicated fire button (large, gamepad-style action button) */
     .firebtn {
       width: clamp(82px, 24vw, 124px); height: clamp(82px, 24vw, 124px);
@@ -108,15 +101,6 @@
     .firebtn:active { transform: scale(0.93); background: var(--primary); border-color: var(--primary); }
     .pad.p1 .firebtn:active, body.me-green .firebtn:active { background: var(--green); border-color: var(--green); }
     .pad.p2 .firebtn:active, body.me-pink .firebtn:active { background: var(--pink); border-color: var(--pink); }
-    /* fire badge: rides on the button matching the snake's current heading */
-    .dbtn.fire::after {
-      content: '🔥';
-      position: absolute; top: -7px; right: -7px;
-      font-size: 0.85rem; line-height: 1; background: var(--bg);
-      border-radius: 50%; padding: 1px 2px;
-      animation: firepulse 0.7s ease-in-out infinite;
-    }
-    @keyframes firepulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.25); } }
 
     /* ---- layouts ---- */
     body.kbd { justify-content: center; }
@@ -154,6 +138,8 @@
     }
     body.session .exit-btn { display: inline-flex; }
     .exit-btn:hover { color: var(--text); border-color: var(--pink); }
+    /* On a phone the exit link takes its own space at the top so nothing sits over the board. */
+    body.onepad .exit-btn { position: static; align-self: flex-start; margin: 2px 0 0 6px; z-index: 1; }
 
     /* ---- overlays / modals ---- */
     .overlay {
@@ -251,12 +237,7 @@
 
   <!-- Player 2 pad (top, rotated to face the player at the other end) -->
   <div class="pad p2" id="padTop">
-    <div class="dpad">
-      <button class="dbtn up"    data-dir="up"    aria-label="Player 2 up">&#9650;</button>
-      <button class="dbtn left"  data-dir="left"  aria-label="Player 2 left">&#9664;</button>
-      <button class="dbtn right" data-dir="right" aria-label="Player 2 right">&#9654;</button>
-      <button class="dbtn down"  data-dir="down"  aria-label="Player 2 down">&#9660;</button>
-    </div>
+    <div class="trackpad" data-track aria-label="Player 2: swipe to steer"><span class="trackpad-hint">swipe to steer</span></div>
     <button class="firebtn" data-fire aria-label="Player 2 fire">&#128293;</button>
   </div>
 
@@ -266,12 +247,7 @@
 
   <!-- Player 1 / local-player pad (bottom) -->
   <div class="pad p1" id="padBottom">
-    <div class="dpad">
-      <button class="dbtn up"    data-dir="up"    aria-label="up">&#9650;</button>
-      <button class="dbtn left"  data-dir="left"  aria-label="left">&#9664;</button>
-      <button class="dbtn right" data-dir="right" aria-label="right">&#9654;</button>
-      <button class="dbtn down"  data-dir="down"  aria-label="down">&#9660;</button>
-    </div>
+    <div class="trackpad" data-track aria-label="Swipe to steer"><span class="trackpad-hint">swipe to steer</span></div>
     <button class="firebtn" data-fire aria-label="Fire">&#128293;</button>
   </div>
 
@@ -425,7 +401,9 @@
       var cs = getComputedStyle(body);
       var safe = (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0);
       var padH = (twopad || onepad) ? (padBottom.getBoundingClientRect().height || 188) : 0;
-      var reserve = twopad ? padH * 2 + safe + 8 : onepad ? padH + safe + 8 : safe + 12;
+      var exitEl = document.getElementById('exitBtn');
+      var exitH = onepad && exitEl ? (exitEl.offsetHeight || 40) + 6 : 0;
+      var reserve = (twopad ? padH * 2 + safe + 8 : onepad ? padH + safe + 8 : safe + 12) + exitH;
       var availH = Math.max(160, appH - reserve);
       var availW = window.innerWidth * (body.classList.contains('kbd') ? 0.985 : 0.96);
       var boardW = Math.max(200, Math.min(availW, availH * (COLS / ROWS)));
@@ -477,21 +455,36 @@
     function resolvedDir(pos, base) { return padInvert(pos) ? INV[base] : base; }
 
     function bindPad(padEl, pos) {
-      padEl.querySelectorAll('[data-dir]').forEach(function (btn) {
-        btn.addEventListener('pointerdown', function (e) {
-          e.preventDefault();
-          if (!running || paused) return;
-          var player = padPlayer(pos);
-          var dir = resolvedDir(pos, btn.getAttribute('data-dir'));
-          if (currentDirName(player) === dir) inputFire(player); else inputDir(player, dir);
-        });
-      });
       var fireEl = padEl.querySelector('[data-fire]');
       if (fireEl) fireEl.addEventListener('pointerdown', function (e) {
         e.preventDefault();
         if (!running || paused) return;
         inputFire(padPlayer(pos));
       });
+      // Trackpad: drag/swipe to steer. Screen-space deltas map straight to board
+      // directions and stay correct for the rotated top pad in local two-player.
+      var track = padEl.querySelector('[data-track]');
+      if (track) {
+        var origin = null, THRESH = 22;
+        track.addEventListener('pointerdown', function (e) {
+          e.preventDefault();
+          origin = { x: e.clientX, y: e.clientY };
+          track.classList.add('active');
+          try { track.setPointerCapture(e.pointerId); } catch (err) {}
+        });
+        track.addEventListener('pointermove', function (e) {
+          if (!origin || !running || paused) return;
+          var dx = e.clientX - origin.x, dy = e.clientY - origin.y;
+          if (Math.abs(dx) < THRESH && Math.abs(dy) < THRESH) return;
+          var dir = (Math.abs(dx) > Math.abs(dy)) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+          inputDir(padPlayer(pos), dir);
+          origin = { x: e.clientX, y: e.clientY };
+        });
+        var endTrack = function () { origin = null; track.classList.remove('active'); };
+        track.addEventListener('pointerup', endTrack);
+        track.addEventListener('pointercancel', endTrack);
+        track.addEventListener('lostpointercapture', endTrack);
+      }
     }
     bindPad(padTop, 'top'); bindPad(padBottom, 'bottom');
 
