@@ -137,7 +137,8 @@
       cursor: pointer; font-size: 0.8rem; font-weight: 600; padding: 6px 12px; border: 1px solid var(--border); border-radius: 20px;
     }
     body.session .exit-btn { display: inline-flex; }
-    .exit-btn:hover { color: var(--text); border-color: var(--pink); }
+    @media (hover: hover) { .exit-btn:hover { color: var(--text); border-color: var(--pink); } }
+    .exit-btn:active { color: var(--text); border-color: var(--pink); }
     /* On a phone the exit link takes its own space at the top so nothing sits over the board. */
     body.onepad .exit-btn { position: static; align-self: flex-start; margin: 2px 0 0 6px; z-index: 1; }
 
@@ -842,7 +843,9 @@
     var confirmOverlay = document.getElementById('confirmOverlay');
     var exitPausedGame = false;
     document.getElementById('exitBtn').addEventListener('click', function () {
-      if (running && !paused && (mode === 'local' || mode === 'host' || mode === 'ai')) { paused = true; exitPausedGame = true; }
+      // Game over (result / how-to screen): leave immediately, no are-you-sure dialog.
+      if (!running) { window.location.href = '/'; return; }
+      if (!paused && (mode === 'local' || mode === 'host' || mode === 'ai')) { paused = true; exitPausedGame = true; }
       confirmOverlay.classList.remove('hidden');
     });
     document.getElementById('btn-stay').addEventListener('click', function () {
