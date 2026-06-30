@@ -261,6 +261,7 @@
       <p class="overlay-text" id="onlineLabel">Invite a friend to your game, or join theirs.</p>
       <input id="codeBox" class="code-box" inputmode="numeric" pattern="[0-9]*" maxlength="6" readonly placeholder="------">
       <button class="btn" id="btn-online-go" hidden>Join game</button>
+      <button class="btn btn-secondary" id="btn-share-code" hidden>Share code</button>
       <div class="btn-row" id="onlineButtons">
         <button class="btn" id="btn-invite">Invite a player</button>
         <button class="btn btn-secondary" id="btn-join">Join a player</button>
@@ -705,6 +706,26 @@
     var onlineMsg = document.getElementById('onlineMsg');
     var onlineButtons = document.getElementById('onlineButtons');
     var onlineGoBtn = document.getElementById('btn-online-go');
+    var shareBtn = document.getElementById('btn-share-code');
+    // Share the room code on mobile (native share sheet), copy it on desktop.
+    var canShareCode = isTouch && !!(navigator.share);
+    shareBtn.textContent = canShareCode ? 'Share code' : 'Copy code';
+    function shareRoomCode() {
+      var code = (codeBox.value || '').replace(/\D/g, '');
+      if (code.length < 6) return;
+      var url = 'https://myplays.net/snake-duel?mode=online';
+      if (canShareCode) {
+        navigator.share({ title: 'Snake Duel', text: 'Join my Snake Duel game, code ' + code + '.', url: url }).catch(function () {});
+        return;
+      }
+      var done = function () { shareBtn.textContent = 'Code copied'; onlineMsg.textContent = 'Code copied to the clipboard.'; setTimeout(function () { shareBtn.textContent = 'Copy code'; }, 1600); };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(code).then(done).catch(function () { try { codeBox.select(); document.execCommand('copy'); done(); } catch (e) {} });
+      } else {
+        try { codeBox.select(); document.execCommand('copy'); done(); } catch (e) {}
+      }
+    }
+    shareBtn.addEventListener('click', shareRoomCode);
 
     function netSend(obj) { if (net.conn && net.conn.open) { try { net.conn.send(obj); } catch (e) {} } }
     function genCode() { var s = ''; for (var i = 0; i < 6; i++) s += Math.floor(Math.random() * 10); return s; }
@@ -713,7 +734,7 @@
       closePeer();
       onlineLabel.textContent = 'Invite a friend to your game, or join theirs.';
       codeBox.value = ''; codeBox.setAttribute('readonly', ''); codeBox.placeholder = '------';
-      onlineButtons.classList.remove('hidden'); onlineGoBtn.hidden = true; onlineMsg.textContent = '';
+      onlineButtons.classList.remove('hidden'); onlineGoBtn.hidden = true; shareBtn.hidden = true; onlineMsg.textContent = '';
     }
     function closePeer() { try { if (net.peer) net.peer.destroy(); } catch (e) {} net.peer = null; net.conn = null; }
 
@@ -721,13 +742,13 @@
       if (!window.Peer) { onlineMsg.textContent = 'Online is unavailable right now. Please try again later.'; return; }
       onlineButtons.classList.add('hidden'); onlineGoBtn.hidden = true;
       onlineLabel.textContent = 'Tell your friend to join with this code.';
-      codeBox.setAttribute('readonly', ''); codeBox.value = '......';
+      codeBox.setAttribute('readonly', ''); codeBox.value = '......'; shareBtn.hidden = true;
       onlineMsg.textContent = 'Setting up your room...';
       var attempts = 0;
       (function tryHost() {
         var code = genCode();
         var peer = new Peer(PREFIX + code); net.peer = peer;
-        peer.on('open', function () { codeBox.value = code; onlineMsg.textContent = 'Waiting for your friend to join...'; });
+        peer.on('open', function () { codeBox.value = code; shareBtn.hidden = false; onlineMsg.textContent = 'Waiting for your friend to join...'; });
         peer.on('connection', function (conn) {
           net.conn = conn;
           conn.on('data', handleHostData);
@@ -745,7 +766,7 @@
     function joinMode() {
       onlineButtons.classList.add('hidden');
       onlineLabel.textContent = 'Enter the code you got from your friend.';
-      codeBox.removeAttribute('readonly'); codeBox.value = ''; codeBox.placeholder = '000000';
+      codeBox.removeAttribute('readonly'); codeBox.value = ''; codeBox.placeholder = '000000'; shareBtn.hidden = true;
       onlineGoBtn.hidden = false; onlineMsg.textContent = '';
       // Focus synchronously inside the user gesture so the mobile keyboard appears.
       codeBox.focus();
