@@ -18,7 +18,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Snake Duel">
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: manipulation; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; user-select: none !important; -webkit-user-select: none !important; -webkit-touch-callout: none !important; touch-action: manipulation; }
     input, textarea { user-select: text; -webkit-user-select: text; }
 
     :root {
@@ -367,6 +367,7 @@
     var localPlayer = 1;
     var game = null, remoteState = null;
     var running = false, paused = false;
+    var _rafTs = 0; // last RAF tick timestamp (ms); used by the stuck-detection watchdog
     var lastSnakeStep = 0, lastProjStep = 0, rafId = null;
     var net = { peer: null, conn: null };
 
@@ -588,6 +589,7 @@
     // ---- loops ----
     function engineStep(ts) {
       if (!running) return;
+      _rafTs = Date.now();
       rafId = requestAnimationFrame(engineStep);
       if (paused) { draw(game); return; }
       if (!lastSnakeStep) { lastSnakeStep = ts; lastProjStep = ts; }
@@ -600,6 +602,7 @@
     }
     function clientStep() {
       if (!running) return;
+      _rafTs = Date.now();
       rafId = requestAnimationFrame(clientStep);
       draw(remoteState); updateBadges();
       if (remoteState && remoteState.status && remoteState.status !== 'playing') endGame(remoteState.status);
@@ -878,6 +881,22 @@
     // pageshow fires when iOS restores a page from the back/forward cache (bfcache),
     // in which case visibilitychange may not fire. This ensures the RAF restarts.
     window.addEventListener('pageshow', function () { restartRaf(); });
+    // focus fires when the browser tab/window regains focus on iOS/desktop.
+    window.addEventListener('focus', function () { restartRaf(); });
+    // Watchdog: if the RAF loop stalls (e.g. iOS background throttling missed by
+    // visibilitychange), restart it. Checks every 800ms; triggers after 1.5s stall.
+    setInterval(function () {
+      if (running && !paused && _rafTs && Date.now() - _rafTs > 1500) restartRaf();
+    }, 800);
+    // Double-tap zoom prevention (iOS ignores user-scalable=no on iOS 10+).
+    var _lastTap = 0;
+    document.addEventListener('touchend', function (e) {
+      var now = Date.now();
+      if (now - _lastTap < 300) e.preventDefault();
+      _lastTap = now;
+    }, { passive: false });
+    // Long-press context menu prevention (prevents "Select All / Copy" callout).
+    document.addEventListener('contextmenu', function (e) { e.preventDefault(); }, { passive: false });
 
     // ---- routing ----
     function start() {
