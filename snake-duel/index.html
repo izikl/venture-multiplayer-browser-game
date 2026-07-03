@@ -141,6 +141,14 @@
     }
     .overlay.hidden { display: none; }
     .hidden, [hidden] { display: none !important; }
+    .net-toast {
+      position: fixed; top: calc(env(safe-area-inset-top) + 12px); left: 50%;
+      transform: translateX(-50%); z-index: 130; max-width: 92vw; text-align: center;
+      background: var(--surface2); color: var(--text); border: 1px solid var(--border);
+      border-radius: 999px; padding: 9px 18px; font-size: 14px; font-weight: 600;
+      box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45);
+    }
+    .net-toast.hidden { display: none; }
     .card {
       margin: auto; max-width: 460px; width: 100%;
       background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
@@ -216,6 +224,7 @@
     }
   </style>
   <script src="/analytics.js" defer></script>
+  <script src="/no-zoom.js" defer></script>
 </head>
 <body>
   <div class="rotate-notice" id="rotateNotice">
@@ -225,6 +234,8 @@
 
   <a href="/" class="hub-link">&#8592; My Plays</a>
   <button type="button" class="exit-btn" id="exitBtn">&#10005; Exit</button>
+
+  <div class="net-toast hidden" id="netToast"></div>
 
   <div class="level-intro hidden" id="levelIntro"><div class="level-intro-text" id="levelIntroText">Level 1</div></div>
 
@@ -369,7 +380,28 @@
     var running = false, paused = false;
     var _rafTs = 0; // last RAF tick timestamp (ms); used by the stuck-detection watchdog
     var lastSnakeStep = 0, lastProjStep = 0, rafId = null;
-    var net = { peer: null, conn: null };
+    var net = { peer: null, conn: null, lastRecvAt: 0 };
+
+    // ---- online connection status (turns a silent freeze into a clear message) ----
+    var netToast = document.getElementById('netToast');
+    function showNetToast(msg) { if (netToast) { netToast.textContent = msg; netToast.classList.remove('hidden'); } }
+    function hideNetToast() { if (netToast) netToast.classList.add('hidden'); }
+    var NET_STALL_MS = 4000;   // no state from the host for this long = stalled
+    var NET_LOST_MS = 12000;   // ...this long, or a closed link = treat as lost
+    // The client only renders what the host streams. If that stream stalls (a
+    // friend's iPhone locking or backgrounding kills the peer-to-peer link),
+    // say so instead of freezing on the last frame forever.
+    function checkNetStall() {
+      if (mode !== 'client' || !running) { hideNetToast(); return; }
+      var idle = Date.now() - (net.lastRecvAt || 0);
+      if (!net.conn || !net.conn.open || idle > NET_LOST_MS) {
+        showNetToast('Connection to your friend lost. Tap \u2715 Exit to leave.');
+      } else if (idle > NET_STALL_MS) {
+        showNetToast('Reconnecting to your friend...');
+      } else {
+        hideNetToast();
+      }
+    }
 
     // device
     var isTouch = window.matchMedia('(pointer: coarse)').matches || ('ontouchstart' in window);
@@ -605,6 +637,7 @@
       _rafTs = Date.now();
       rafId = requestAnimationFrame(clientStep);
       draw(remoteState); updateBadges();
+      checkNetStall();
       if (remoteState && remoteState.status && remoteState.status !== 'playing') endGame(remoteState.status);
     }
 
@@ -639,6 +672,7 @@
     function endGame(status) {
       if (!running) return;
       running = false; if (rafId) cancelAnimationFrame(rafId);
+      hideNetToast();
       var ai = (mode === 'ai');
       var msg = ai ? { p1: 'You win!', p2: 'The computer wins!', tie: "It's a tie!" } : { p1: 'Green wins!', p2: 'Pink wins!', tie: "It's a tie!" };
       resultTitle.textContent = msg[status] || 'Result';
@@ -736,6 +770,7 @@
 
     function resetOnlineUi() {
       closePeer();
+      hideNetToast();
       onlineLabel.textContent = 'Invite a friend to your game, or join theirs.';
       codeBox.value = ''; codeBox.setAttribute('readonly', ''); codeBox.placeholder = '------';
       onlineButtons.classList.remove('hidden'); onlineGoBtn.hidden = true; shareBtn.hidden = true; onlineMsg.textContent = '';
@@ -753,6 +788,7 @@
         var code = genCode();
         var peer = new Peer(PREFIX + code); net.peer = peer;
         peer.on('open', function () { codeBox.value = code; shareBtn.hidden = false; onlineMsg.textContent = 'Waiting for your friend to join...'; });
+        peer.on('disconnected', function () { try { peer.reconnect(); } catch (e) {} });
         peer.on('connection', function (conn) {
           net.conn = conn;
           conn.on('data', handleHostData);
@@ -790,10 +826,11 @@
         setTimeout(function () { if (!conn.open) onlineMsg.textContent = 'No response yet. Check the code and try again.'; }, 9000);
       });
       peer.on('error', function (err) { onlineMsg.textContent = 'Connection problem (' + (err && err.type) + '). Check the code.'; });
+      peer.on('disconnected', function () { if (mode === 'client' && running) showNetToast('Reconnecting to your friend...'); try { peer.reconnect(); } catch (e) {} });
     }
 
-    function handleHostData(d) { if (!d) return; if (d.t === 'dir') { if (game) game.setDir(2, d.dir); } else if (d.t === 'fire') { if (game) game.fire(2); } else if (d.t === 'rematch') startHost(); }
-    function handleClientData(d) { if (!d) return; if (d.t === 'state') { remoteState = d.s; if (!running) beginClient(); } }
+    function handleHostData(d) { net.lastRecvAt = Date.now(); if (!d) return; if (d.t === 'dir') { if (game) game.setDir(2, d.dir); } else if (d.t === 'fire') { if (game) game.fire(2); } else if (d.t === 'rematch') startHost(); }
+    function handleClientData(d) { net.lastRecvAt = Date.now(); if (!d) return; if (d.t === 'state') { remoteState = d.s; if (!running) beginClient(); } }
 
     // ---- speed ----
     var speedRange = document.getElementById('speedRange');
@@ -876,7 +913,7 @@
       rafId = requestAnimationFrame(mode === 'client' ? clientStep : engineStep);
     }
     document.addEventListener('visibilitychange', function () {
-      if (document.visibilityState === 'visible') restartRaf();
+      if (document.visibilityState === 'visible') { restartRaf(); checkNetStall(); }
     });
     // pageshow fires when iOS restores a page from the back/forward cache (bfcache),
     // in which case visibilitychange may not fire. This ensures the RAF restarts.
@@ -888,15 +925,9 @@
     setInterval(function () {
       if (running && !paused && _rafTs && Date.now() - _rafTs > 1500) restartRaf();
     }, 800);
-    // Double-tap zoom prevention (iOS ignores user-scalable=no on iOS 10+).
-    var _lastTap = 0;
-    document.addEventListener('touchend', function (e) {
-      var now = Date.now();
-      if (now - _lastTap < 300) e.preventDefault();
-      _lastTap = now;
-    }, { passive: false });
-    // Long-press context menu prevention (prevents "Select All / Copy" callout).
-    document.addEventListener('contextmenu', function (e) { e.preventDefault(); }, { passive: false });
+    // Zoom (pinch + double-tap) and selection/callout guards live in the shared
+    // /no-zoom.js (loaded in <head>), which also excludes form fields so the
+    // room-code input keeps its keyboard.
 
     // ---- routing ----
     function start() {
