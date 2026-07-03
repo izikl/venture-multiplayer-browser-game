@@ -18,7 +18,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Snake Duel">
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
+    input, textarea { user-select: text; -webkit-user-select: text; }
 
     :root {
       --bg:         #0f1117;
@@ -35,7 +36,7 @@
       --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
     }
 
-    html, body { overscroll-behavior: none; }
+    html, body { overscroll-behavior: none; touch-action: manipulation; }
     body {
       background: var(--bg);
       color: var(--text);
@@ -859,6 +860,17 @@
     document.getElementById('btn-stay').addEventListener('click', function () {
       confirmOverlay.classList.add('hidden');
       if (exitPausedGame) { paused = false; exitPausedGame = false; }
+    });
+
+    // ---- page visibility: restart RAF loop when returning from background ----
+    // On iOS Safari, pending requestAnimationFrame callbacks can be cancelled when
+    // the page is backgrounded (screen lock, app switch). Without this, the game
+    // loop never resumes and the game appears frozen on return.
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState !== 'visible' || !running) return;
+      lastSnakeStep = 0; lastProjStep = 0;
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(mode === 'client' ? clientStep : engineStep);
     });
 
     // ---- routing ----
