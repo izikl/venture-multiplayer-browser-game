@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <pattern id="dots" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+      <circle cx="1" cy="1" r="1.2" fill="#ff7a45" opacity="0.18"/>
+    </pattern>
+    <linearGradient id="grad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ff7a45" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#0f1117" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="topbar" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#ff7a45"/>
+      <stop offset="100%" stop-color="#ff4500"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="#0f1117"/>
+  <rect width="1200" height="630" fill="url(#dots)"/>
+  <rect width="1200" height="630" fill="url(#grad)"/>
+  <rect width="1200" height="6" fill="url(#topbar)"/>
+  <text x="600" y="230" font-family="system-ui,-apple-system,sans-serif" font-size="110" text-anchor="middle" dominant-baseline="middle">⚔️</text>
+  <text x="600" y="370" font-family="system-ui,-apple-system,sans-serif" font-size="72" font-weight="900" text-anchor="middle" fill="#ff7a45">Snake Duel</text>
+  <text x="600" y="450" font-family="system-ui,-apple-system,sans-serif" font-size="34" text-anchor="middle" fill="#8b8fa8">Two snakes. One winner. Play vs AI or challenge a friend.</text>
+  <text x="600" y="535" font-family="system-ui,-apple-system,sans-serif" font-size="26" text-anchor="middle" fill="#5a5e78">Free · No account · myplays.net</text>
+</svg>

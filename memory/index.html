@@ -5,6 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>Memory Match - My Plays</title>
   <meta name="description" content="Play Memory Match - flip cards and find all the pairs. Free skill-based browser game on My Plays.">
+  <meta property="og:title" content="Memory Match - My Plays">
+  <meta property="og:description" content="Flip cards and match the pairs. Beat your best time and score. Free, no account.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://myplays.net/og-images/memory.svg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:url" content="https://myplays.net/memory">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Memory Match - My Plays">
+  <meta name="twitter:description" content="Flip cards and match the pairs. Beat your best time and score. Free, no account.">
+  <meta name="twitter:image" content="https://myplays.net/og-images/memory.svg">
+  <link rel="canonical" href="https://myplays.net/memory">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🃏</text></svg>">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -249,6 +261,22 @@
   </style>
   <script src="/analytics.js" defer></script>
   <script src="/no-zoom.js" defer></script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "VideoGame",
+    "name": "Memory Match",
+    "description": "Flip cards and find all the pairs. Fewer moves and faster time earns a higher score. Free skill-based browser game.",
+    "url": "https://myplays.net/memory",
+    "image": "https://myplays.net/og-images/memory.svg",
+    "genre": ["Puzzle", "Memory", "Skill"],
+    "playMode": "SinglePlayer",
+    "applicationCategory": "Game",
+    "operatingSystem": "Web Browser",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "publisher": { "@type": "Organization", "name": "My Plays", "url": "https://myplays.net" }
+  }
+  </script>
 </head>
 <body>
   <div class="hub-header">
@@ -301,6 +329,7 @@
       <div class="overlay-detail" id="win-detail"></div>
       <div class="btn-row">
         <button class="btn btn-yellow" id="btn-replay">Play Again</button>
+        <button class="btn btn-secondary" id="btn-share-score">Share score</button>
         <a href="/" class="btn btn-secondary">Hub</a>
       </div>
     </div>
@@ -433,6 +462,22 @@
 
   document.getElementById('btn-start').addEventListener('click', startGame);
   document.getElementById('btn-replay').addEventListener('click', startGame);
+
+  document.getElementById('btn-share-score').addEventListener('click', function () {
+    var s = parseInt(winScore.textContent, 10) || 0;
+    var hi = parseInt(localStorage.getItem(HI_KEY) || '0', 10);
+    var text = 'I scored ' + s + ' on Memory Match' + (s >= hi ? ' (new best!)' : '') + ' - play free at myplays.net';
+    if (navigator.share) {
+      navigator.share({ title: 'Memory Match - My Plays', text: text, url: 'https://myplays.net/memory' }).catch(function () {});
+    } else {
+      navigator.clipboard.writeText(text + '\nhttps://myplays.net/memory').then(function () {
+        var btn = document.getElementById('btn-share-score');
+        var orig = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(function () { btn.textContent = orig; }, 1600);
+      }).catch(function () {});
+    }
+  });
 
   updateBestDisplay();
   </script>
